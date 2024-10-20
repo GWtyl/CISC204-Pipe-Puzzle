@@ -19,7 +19,7 @@ class BasicPropositions:
 
     def _prop_name(self):
         return f"A.{self.data}"
-
+    #test
 
 
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
