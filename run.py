@@ -9,6 +9,7 @@ config.sat_backend = "kissat"
 # Encoding that will store all of your constraints
 E = Encoding()
 
+
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
 class BasicPropositions:
@@ -18,6 +19,7 @@ class BasicPropositions:
 
     def _prop_name(self):
         return f"A.{self.data}"
+
 
 
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
