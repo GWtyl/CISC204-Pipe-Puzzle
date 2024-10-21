@@ -9,16 +9,20 @@ config.sat_backend = "kissat"
 # Encoding that will store all of your constraints
 E = Encoding()
 
-ORIENTATIONS = list('NSEW')
-    pipe = ['start', 'end' ,'p1', 'p2', 'p3']
-    LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
+#ORIENTATIONS = list('NSEW')
+PIPE = ['start', 'end' ,'p1', 'p2', 'p3']
+LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
+#win condition
+#connected
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
-class BasicPropositions:
+class BasicPropositions: #Location
 
-    def __init__(self, data):
-        self.data = data
-
+    def __init__(self, pipe, location) -> None:
+        assert pipe in PIPE
+        assert location in LOCATIONS
+        self.pipe = pipe
+        self.location = location
     def _prop_name(self):
         return f"A.{self.data}"
     
