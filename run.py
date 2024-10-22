@@ -10,24 +10,36 @@ config.sat_backend = "kissat"
 E = Encoding()
 
 #ORIENTATIONS = list('NSEW')
-PIPE = ['start', 'end' ,'p1', 'p2', 'p3']
+#PIPE_TYPE = ['start', 'end' ,'p1', 'p2', 'p3']
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
-#win condition
-#connected
+#PIPE_CONFIG = ['startE','endW']
+PIPE_TYPE = [['E'],[['E'],['W']],[['E'],['W'],['S']]]#start...
+CONNECTED = [[['E'],[['E'],['W']]],[[],[]]]
+#win condition: go through neighbor array and make sure every pair of neighbor is connected
+NEIGHBOR = [['10','11'],[],[]]#...
+A = [[['E'],['W']],[['N'],['S']]]
+
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
-class BasicPropositions: #Location
+class Configuration(object): 
 
-    def __init__(self, pipe, location) -> None:
-        assert pipe in PIPE
+    def __init__(self, pipe_type, location) -> None:
+        assert pipe_type in PIPE_TYPE
         assert location in LOCATIONS
-        self.pipe = pipe
+        self.pipe = pipe_type
         self.location = location
     def _prop_name(self):
-        return f"A.{self.data}"
-    
-    
+        return f"({self.pipe_type} @ {self.location})"
 
+class Connected(object):
+    
+    def __init__(self, neighbor, pipe_type) -> None:
+        assert neighbor in NEIGHBOR
+        assert pipe_type in PIPE_TYPE
+        self.pipe_type = pipe_type
+        self.neighbor = neighbor
+    def _prop_name(self):                    
+        return f"({self.neighbor}@{self.location})"
 
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
 # for propositions within that class. For example, you can enforce that "at least one" of the propositions
@@ -45,8 +57,8 @@ class FancyPropositions:
         return f"A.{self.data}"
 
 # Call your variables whatever you want
-a = BasicPropositions("a")
-b = BasicPropositions("b")   
+a = BasicPropositions("a") #connected
+b = BasicPropositions("b") #
 c = BasicPropositions("c")
 d = BasicPropositions("d")
 e = BasicPropositions("e")
