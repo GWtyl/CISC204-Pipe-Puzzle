@@ -18,6 +18,7 @@ CONNECTED = [[['E'],[['E'],['W']]],[[],[]]]
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
 NEIGHBOR = [['10','11'],[],[]]#...
 A = [[['E'],['W']],[['N'],['S']]]
+#testtest
 
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
