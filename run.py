@@ -29,7 +29,7 @@ for i in PIPE_TYPE:
                     if a == "W":
                         c=[i,k]
                         CONNECTED.append(c)
-    
+
             
 
 CONNECT = [[['E'],['W']],[['N'],['S']]]
@@ -76,11 +76,11 @@ class FancyPropositions:
         return f"A.{self.data}"
 
 # Call your variables whatever you want
-a = BasicPropositions("a") #connected
-b = BasicPropositions("b") #
-c = BasicPropositions("c")
-d = BasicPropositions("d")
-e = BasicPropositions("e")
+a = FancyPropositions("a") #connected
+b = FancyPropositions("b") #
+c = FancyPropositions("c")
+d = FancyPropositions("d")
+e = FancyPropositions("e")
 # At least one of these will be true
 x = FancyPropositions("x")
 y = FancyPropositions("y")
