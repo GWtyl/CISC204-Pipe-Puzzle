@@ -10,17 +10,53 @@ import random
 # Encoding that will store all of your constraints
 E = Encoding()
 
-#ORIENTATIONS = list('NSEW')
+ORIENTATIONS = list('NSEW')
 #PIPE_TYPE = ['start', 'end' ,'p1', 'p2', 'p3']
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
 #PIPE_CONFIG = ['startE','endW']
-PIPE_TYPE = [['E'],['W'],[['E'],['W']],[['E'],['W'],['S']]]#start...
-CONNECTED = [[['E'],[['E'],['W']]],[[],[]]]
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
 NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23','33']]
 
 NEIGHBORLR = [['10','11'],['11','12'],['12','13'],['21','22'],['22','23'],['31','32'],
             ['32','33'],['33','34']]
+
+
+pipe_type = [['W'],['E']]
+
+for i in range(0, len(ORIENTATIONS)):
+    orien1 = ORIENTATIONS[i]
+    for j in range(i + 1, len(ORIENTATIONS)):
+        orien2 = ORIENTATIONS[j]
+        p=[orien1, orien2]
+        pipe_type.append(p)
+
+for i in range(0, len(ORIENTATIONS)):
+    orien1 = ORIENTATIONS[i]
+    for j in range(i + 1, len(ORIENTATIONS)):
+        orien2 = ORIENTATIONS[j]
+        for k in range(i + 2, len(ORIENTATIONS)):
+            orien3 = ORIENTATIONS[k]
+            p=[orien1, orien2, orien3]
+            pipe_type.append(p)
+
+#print(pipe_type)
+
+PIPE_TYPE = pipe_type           
+
+CONNECTED = []
+for i in pipe_type:
+    for j in i:
+        if j == "S":
+            for x in pipe_type:
+                for y in x:
+                    if x == "N":
+                        c=[i,x]
+                        CONNECTED.append(c)
+                        
+        else:
+            break  #check: only break 1 loop
+        
+
 
 for i in PIPE_TYPE:
     for j in i:
@@ -31,16 +67,7 @@ for i in PIPE_TYPE:
                         c=[i,k]
                         CONNECTED.append(c)
 
-            
 
-CONNECT = [[['E'],['W']],[['N'],['S']]]
-#TODO: model the oriatation and pipe type
-for location in LOCATIONS:
-    if(location):
-
-
-NEIGHBOR = [['10','11'],[],[]]#...
-Connect = [[['E'],['W']],[['N'],['S']]]
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
 class Location(object): 
@@ -52,7 +79,7 @@ class Location(object):
     def _prop_name(self):
         return f"({self.pipe} @ {self.location})"
 
-class Connected(object):
+'''class Connected(object):
     
     def __init__(self, neighbor, pipe_type) -> None:
         assert neighbor in NEIGHBOR
@@ -60,7 +87,25 @@ class Connected(object):
         self.pipe_type = pipe_type
         self.neighbor = neighbor
     def _prop_name(self):                    
-        return f"({self.neighbor}@{self.location})"
+        return f"({self.neighbor}@{self.location})"'''
+        
+#TODO: model the oriatation and pipe type
+location_propositions = []
+for l in LOCATIONS:
+    pipe_name = [f'p{l}']
+    if(l == '10'):
+        location_propositions.append(Location(['E'], l))
+    elif(l == '34'):
+        location_propositions.append(Location(['W'], l))
+    else:
+        for i in range(len(PIPE_TYPE)):
+            p=PIPE_TYPE[random.randint(0, len(PIPE_TYPE)-1)]
+            location_propositions.append(Location(p, l))
+    #constraint.add_exactly_one(E, location_propositions)
+#print(location_propositions)
+
+###########################################################################################
+
 
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
 # for propositions within that class. For example, you can enforce that "at least one" of the propositions
@@ -76,20 +121,7 @@ class FancyPropositions:
 
     def _prop_name(self):
         return f"A.{self.data}"
-#TODO: model the oriatation and pipe type
-location_propositions = []
-for l in LOCATIONS:
-    pipe_name = [f'p{l}']
-    if(l == '10'):
-        location_propositions.append(Location(['E'], l))
-    elif(l == '34'):
-        location_propositions.append(Location(['W'], l))
-    else:
-        for i in range(len(PIPE_TYPE)):
-            p=PIPE_TYPE[random.randint(0, len(PIPE_TYPE)-1)]
-            location_propositions.append(Location(p, l))
-    #constraint.add_exactly_one(E, location_propositions)
-print(location_propositions)
+
 # Call your variables whatever you want
 a = FancyPropositions("a") #connected
 b = FancyPropositions("b") #
