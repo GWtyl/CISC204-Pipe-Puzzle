@@ -5,7 +5,8 @@ from bauhaus.utils import count_solutions, likelihood
 # These two lines make sure a faster SAT solver is used.
 from nnf import config
 config.sat_backend = "kissat"
-
+#import random
+import random
 # Encoding that will store all of your constraints
 E = Encoding()
 
@@ -13,26 +14,21 @@ E = Encoding()
 #PIPE_TYPE = ['start', 'end' ,'p1', 'p2', 'p3']
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
 #PIPE_CONFIG = ['startE','endW']
-PIPE_TYPE = [['E'],[['E'],['W']],[['E'],['W'],['S']]]#start...
+PIPE_TYPE = [['E'],['W'],[['E'],['W']],[['E'],['W'],['S']]]#start...
 CONNECTED = [[['E'],[['E'],['W']]],[[],[]]]
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
 NEIGHBOR = [['10','11'],[],[]]#...
 Connect = [[['E'],['W']],[['N'],['S']]]
-#TODO: model the oriatation and pipe type
-for location in LOCATIONS:
-    if(location):
-
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
-class Configuration(object): 
-
-    def __init__(self, pipe_type, location) -> None:
-        assert pipe_type in PIPE_TYPE
+class Location(object): 
+    def __init__(self, pipe, location) -> None:
+        assert pipe in PIPE_TYPE
         assert location in LOCATIONS
         self.pipe = pipe_type
         self.location = location
     def _prop_name(self):
-        return f"({self.pipe_type} @ {self.location})"
+        return f"({self.pipe} @ {self.location})"
 
 class Connected(object):
     
@@ -58,13 +54,26 @@ class FancyPropositions:
 
     def _prop_name(self):
         return f"A.{self.data}"
-
+#TODO: model the oriatation and pipe type
+location_propositions = []
+for l in LOCATIONS:
+    pipe_name = [f'p{l}']
+    if(l == '10'):
+        location_propositions.append(Location(['E'], l))
+    elif(l == '34'):
+        location_propositions.append(Location(['W'], l))
+    else:
+        for i in range(len(PIPE_TYPE)):
+            p=PIPE_TYPE[random.randint(0, len(PIPE_TYPE)-1)]
+            location_propositions.append(Location(p, l))
+    #constraint.add_exactly_one(E, location_propositions)
+print(location_propositions)
 # Call your variables whatever you want
-a = BasicPropositions("a") #connected
-b = BasicPropositions("b") #
-c = BasicPropositions("c")
-d = BasicPropositions("d")
-e = BasicPropositions("e")
+a = FancyPropositions("a") #connected
+b = FancyPropositions("b") #
+c = FancyPropositions("c")
+d = FancyPropositions("d")
+e = FancyPropositions("e")
 # At least one of these will be true
 x = FancyPropositions("x")
 y = FancyPropositions("y")
@@ -107,3 +116,13 @@ if __name__ == "__main__":
         # Literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
     print()
+    ORIENTATIONS = list('NSEW')
+
+    for i in range(0, len(ORIENTATIONS)):
+        orien1 = PIPE_TYPE[i]
+        for j in range(i + 1, len(ORIENTATIONS)):
+            orien2 = PIPE_TYPE[j]
+
+            pipe_type = [orien1, orien2]
+
+    print(pipe_type)
