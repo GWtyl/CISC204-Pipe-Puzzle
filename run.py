@@ -17,8 +17,10 @@ PIPE_TYPE = [['E'],[['E'],['W']],[['E'],['W'],['S']]]#start...
 CONNECTED = [[['E'],[['E'],['W']]],[[],[]]]
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
 NEIGHBOR = [['10','11'],[],[]]#...
-A = [[['E'],['W']],[['N'],['S']]]
+Connect = [[['E'],['W']],[['N'],['S']]]
 #TODO: model the oriatation and pipe type
+for location in LOCATIONS:
+    if(location):
 
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
