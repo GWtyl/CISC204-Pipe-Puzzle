@@ -13,14 +13,30 @@ E = Encoding()
 #PIPE_TYPE = ['start', 'end' ,'p1', 'p2', 'p3']
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
 #PIPE_CONFIG = ['startE','endW']
-PIPE_TYPE = [['E'],[['E'],['W']],[['E'],['W'],['S']]]#start...
+PIPE_TYPE = [[['E']],[['E'],['W']],[['E'],['W'],['S']]]#start...
 CONNECTED = [[['E'],[['E'],['W']]],[[],[]]]
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
-NEIGHBOR = [['10','11'],[],[]]#...
-Connect = [[['E'],['W']],[['N'],['S']]]
+NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23','33']]
+
+NEIGHBORLR = [['10','11'],['11','12'],['12','13'],['21','22'],['22','23'],['31','32'],
+            ['32','33'],['33','34']]
+
+for i in PIPE_TYPE:
+    for j in i:
+        if j == "E":
+            for k in PIPE_TYPE:
+                for a in k:
+                    if a == "W":
+                        c=[i,k]
+                        CONNECTED.append(c)
+    
+            
+
+CONNECT = [[['E'],['W']],[['N'],['S']]]
 #TODO: model the oriatation and pipe type
 for location in LOCATIONS:
     if(location):
+
 
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
