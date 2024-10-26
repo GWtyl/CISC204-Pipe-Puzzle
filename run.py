@@ -20,8 +20,6 @@ NEIGHBOR = [['10','11'],[],[]]#...
 A = [[['E'],['W']],[['N'],['S']]]
 #TODO: model the oriatation and pipe type
 
-#testing if I can push
-
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
 class Configuration(object): 
