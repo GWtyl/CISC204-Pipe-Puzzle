@@ -11,53 +11,42 @@ import random
 E = Encoding()
 
 ORIENTATIONS = list('NSEW')
-#PIPE_TYPE = ['start', 'end' ,'p1', 'p2', 'p3']
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
-#PIPE_CONFIG = ['startE','endW']
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
 NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23','33']]
 
 NEIGHBORLR = [['10','11'],['11','12'],['12','13'],['21','22'],['22','23'],['31','32'],
             ['32','33'],['33','34']]
 
-
-pipe_type = [['W'],['E']]
-
+PIPE_TYPE = [['W'],['E']]
 for i in range(0, len(ORIENTATIONS)):
     orien1 = ORIENTATIONS[i]
     for j in range(i + 1, len(ORIENTATIONS)):
         orien2 = ORIENTATIONS[j]
         p=[orien1, orien2]
-        pipe_type.append(p)
+        PIPE_TYPE.append(p)
 
 for i in range(0, len(ORIENTATIONS)):
     orien1 = ORIENTATIONS[i]
     for j in range(i + 1, len(ORIENTATIONS)):
         orien2 = ORIENTATIONS[j]
-        for k in range(i + 2, len(ORIENTATIONS)):
+        for k in range(j + 1, len(ORIENTATIONS)):
             orien3 = ORIENTATIONS[k]
             p=[orien1, orien2, orien3]
-            pipe_type.append(p)
-
+            PIPE_TYPE.append(p)
 #print(pipe_type)
 
-PIPE_TYPE = pipe_type           
-
 CONNECTED = []
-for i in pipe_type:
+for i in PIPE_TYPE:
     for j in i:
         if j == "S":
-            for x in pipe_type:
+            for x in PIPE_TYPE:
                 for y in x:
                     if x == "N":
                         c=[i,x]
-                        CONNECTED.append(c)
-                        
+                        CONNECTED.append(c)    
         else:
             break  #check: only break 1 loop
-        
-
-
 for i in PIPE_TYPE:
     for j in i:
         if j == "E":
@@ -66,7 +55,7 @@ for i in PIPE_TYPE:
                     if a == "W":
                         c=[i,k]
                         CONNECTED.append(c)
-
+CONNECTED.remove([['E'], ['W']])
 
 # To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
 @proposition(E)
@@ -74,35 +63,33 @@ class Location(object):
     def __init__(self, pipe, location) -> None:
         assert pipe in PIPE_TYPE
         assert location in LOCATIONS
-        self.pipe = pipe_type
+        self.pipe = pipe
         self.location = location
     def _prop_name(self):
         return f"({self.pipe} @ {self.location})"
 
-'''class Connected(object):
-    
+class Connected(object):
     def __init__(self, neighbor, pipe_type) -> None:
-        assert neighbor in NEIGHBOR
+        assert neighbor in NEIGHBORUD
         assert pipe_type in PIPE_TYPE
-        self.pipe_type = pipe_type
+        self.pipe_type = PIPE_TYPE
         self.neighbor = neighbor
     def _prop_name(self):                    
-        return f"({self.neighbor}@{self.location})"'''
-        
+        return f"({self.neighbor}@{self.location})"
+     
 #TODO: model the oriatation and pipe type
 location_propositions = []
 for l in LOCATIONS:
-    pipe_name = [f'p{l}']
     if(l == '10'):
-        location_propositions.append(Location(['E'], l))
+        location_propositions.append(Location(PIPE_TYPE[1], l))
     elif(l == '34'):
-        location_propositions.append(Location(['W'], l))
+        location_propositions.append(Location(PIPE_TYPE[0], l))
     else:
-        for i in range(len(PIPE_TYPE)):
-            p=PIPE_TYPE[random.randint(0, len(PIPE_TYPE)-1)]
+        for i in range(2,len(PIPE_TYPE)):
+            p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
             location_propositions.append(Location(p, l))
-    #constraint.add_exactly_one(E, location_propositions)
-#print(location_propositions)
+    #@constraint.at_most_k(E, 11)   
+
 
 ###########################################################################################
 
@@ -177,11 +164,14 @@ if __name__ == "__main__":
     print()
     ORIENTATIONS = list('NSEW')
 
-    for i in range(0, len(ORIENTATIONS)):
+    '''for i in range(0, len(ORIENTATIONS)):
         orien1 = PIPE_TYPE[i]
         for j in range(i + 1, len(ORIENTATIONS)):
             orien2 = PIPE_TYPE[j]
 
-            pipe_type = [orien1, orien2]
+            PIPE_TYPE = [orien1, orien2]'''
 
-    print(pipe_type)
+    #print(PIPE_TYPE)
+    #print(len(location_propositions))
+    #print(CONNECTED)
+
