@@ -11,7 +11,14 @@ import random
 E = Encoding()
 
 ORIENTATIONS = list('NSEW')
+#     N
+#   +----+
+# W |    | E
+#   +----+
+#     S   
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
+
+
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
 NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23','33']]
 
@@ -67,17 +74,27 @@ class Location(object):
         self.location = location
     def _prop_name(self):
         return f"({self.pipe} @ {self.location})"
+    
+#TODO: get the setup and check if two pipe is connected and then put them into TODO checked list
+#two pipe  at these location is connected
+@proposition(E)
+class TwoPipeConnection(object):
+    def __init__(self, pipe1, pipe2, location1,location2) -> None:
+        assert pipe1 in PIPE_TYPE
+        assert pipe2 in PIPE_TYPE
+        assert location1 in LOCATIONS
+        assert location2 in LOCATIONS
+        self.pipe1 = pipe1
+        self.pipe2 = pipe2
+        self.location1 = location1
+        self.location2 = location2
 
-class Connected(object):
-    def __init__(self, neighbor, pipe_type) -> None:
-        assert neighbor in NEIGHBORUD
-        assert pipe_type in PIPE_TYPE
-        self.pipe_type = PIPE_TYPE
-        self.neighbor = neighbor
-    def _prop_name(self):                    
-        return f"({self.neighbor}@{self.location})"
+    def _prop_name(self):
+        return f"({self.pipe1}@{self.location1} -> {self.edge2}@{self.location1})"
+
+
      
-#TODO: model the oriatation and pipe type
+#model the oriatation and pipe type
 location_propositions = []
 for l in LOCATIONS:
     if(l == '10'):
@@ -91,7 +108,6 @@ for l in LOCATIONS:
     #@constraint.at_most_k(E, 11)   
 
 
-###########################################################################################
 
 
 # Different classes for propositions are useful because this allows for more dynamic constraint creation

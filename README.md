@@ -1,7 +1,11 @@
 # CISC/CMPE 204 Modelling Project for group 6: Pipe Puzzle
 
-This is a game about connecting pipes in a 3x3 grid where the start is at top-left corner and end at bottom right corner. The goal of this game is to connect the starting pipe, ending pipe, and every pipe in between them by rotating the pipes on the grid.
+This is a game about connecting pipes in a 3x3 grid where the start is at top-left corner and end at bottom right corner. The goal of this game is to connect the starting pipe, ending pipe, and every pipe in between them by rotating the pipes on the grid. 
+There are a simple graph we put up to have a better understading of how the whole grid will look like
 
+# start |p11|p12|p13|
+#       |p21|p22|p23|
+#       |p31|p32|p33| end
 and provide pointers to the general structure of the repository. How you organize and build things (which files, how you structure things, etc) is entirely up to you! 
 ## Structure
 
