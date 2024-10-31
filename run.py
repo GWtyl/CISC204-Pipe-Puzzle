@@ -196,7 +196,32 @@ def example_theory():
             elif connectUD[0] in grid_setup[i+1] and connectUD[1] in grid_setup[i]:
                 connected_pipe.append(grid_setup[i+1])
                 connected_pipe.append(grid_setup[i])
-    constraint.at_most(k)       
+    constraint.at_most(k)     
+    
+    #all possible connection [E,[E,W]]
+    possible_connectionsud = []
+    for i in PIPE_TYPE:
+        for j in i:
+            if j == "S":
+                for x in PIPE_TYPE:
+                    for y in x:
+                        if y == "N":
+                            c=[i,x]
+                            possible_connectionsud.append(c)    
+            else:
+                break  
+    constraint.add_exactly_one(E, possible_connectionsud)
+    possible_connectionslr = []
+    for i in PIPE_TYPE:
+        for j in i:
+            if j == "E":
+                for k in PIPE_TYPE:
+                    for a in k:
+                        if a == "W":
+                            c=[i,k]
+                            possible_connectionslr.appenda
+    possible_connectionslr.remove([['E'], ['W']])
+    constraint.add_exactly_one(E, possible_connectionslr)
     #write a connected function to check if two pipes are connected
     #to do this we have to do for 3 things 
     '''
