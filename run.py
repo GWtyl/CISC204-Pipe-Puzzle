@@ -193,6 +193,47 @@ def example_theory():
 
     return E
 
+#TODO: write a connected function to check if two pipes are connected
+#to do this we have to do for 3 things 
+'''
+1. check if they are neighbors
+2. check if they are facing the same direction
+3. if these conditions are met put them into the  Connected list
+'''
+#this is only to check if they are connected and if they are beside eachother on the x axis(left and right)
+#first check the location to see if they are next to each other and the check if the pipe is facting the same direction
+def pipe_connected(pipe1, pipe2):
+    
+    #calls this function from twopipeconnection class to check if the location and pipe exists
+    #TwoPipeConnection.__init__(pipe1,pipe2,location1,location2) 
+    
+    for nbor in NEIGHBORLR:
+        
+        #check if they are neighbor ( neighbor is always counted from left to right) 
+        if (nbor[0] in pipe1 and nbor[1] in pipe2):
+            if "E" in pipe1 and "W" in pipe2:
+                return True
+        elif (nbor[0] in pipe2 and nbor[1] in pipe1):
+            if "E" in pipe2 and "W" in pipe1:
+                return True
+            
+    for nbor in NEIGHBORUD:
+        if (nbor[0] in pipe1 and nbor[1] in pipe2):
+            if "N" in pipe1 and "S" in pipe2:
+                return True
+        elif (nbor[0] in pipe2 and nbor[1] in pipe1):
+            if "N" in pipe2 and "S" in pipe1:
+                return True
+    return False
+  
+  
+#(["N","E","S"] @ 3.3) 
+def win_condition(grid_setup):
+    for i in range(0, len(grid_setup)):
+        if  not pipe_connected(grid_setup[i], grid_setup[i+1]):
+            return False
+    
+    return True
 
 if __name__ == "__main__":
 
