@@ -188,7 +188,7 @@ def example_theory():
     p=location_propositions[random.randint(81, 90)]
     grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
-    E.add_constraint(And(grid_setup))#imply the there are different orientation for the setup with all same pipe
+    E.add_constraint(And(*grid_setup))#imply the there are different orientation for the setup with all same pipe
     
     connected_pipe = []
     pair_pipe = []
@@ -216,7 +216,7 @@ def example_theory():
                         pair_pipe = []
                         break
 
-    E.add_constraint(And(connected_pipe))
+    E.add_constraint(And(*connected_pipe))
     
     #all possible connection [E,[E,W]]
     possible_connectionsud = []
