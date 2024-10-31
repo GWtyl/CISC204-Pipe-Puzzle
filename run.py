@@ -18,7 +18,6 @@ ORIENTATIONS = list('NSEW')
 #     S   
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
 
-
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
 NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23','33']]
 
@@ -75,7 +74,8 @@ class Location(object):
     def _prop_name(self):
         return f"({self.pipe} @ {self.location})"
     
-#TODO: get the setup and check if two pipe is connected and then put them into TODO checked list
+#TODO: get the setup and check if two pipe is connected and then put them into 
+#TODO checked list
 #two pipe  at these location is connected
 @proposition(E)
 class TwoPipeConnection(object):
@@ -90,22 +90,8 @@ class TwoPipeConnection(object):
         self.location2 = location2
 
     def _prop_name(self):
-        return f"({self.pipe1}@{self.location1} -> {self.edge2}@{self.location1})"
+        return f"({self.pipe1}@{self.location1} -> {self.pipe2}@{self.location1})"
 
-   
-#model the oriatation and pipe type
-location_propositions = []
-for l in LOCATIONS:
-    if(l == '10'):
-        location_propositions.append(Location(PIPE_TYPE[1], l))
-    elif(l == '34'):
-        location_propositions.append(Location(PIPE_TYPE[0], l))
-    else:
-        for i in range(2,len(PIPE_TYPE)):
-            p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
-            location_propositions.append(Location(p, l))
-    #@constraint.at_most_k(E, 11)   
-   
 
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
 # for propositions within that class. For example, you can enforce that "at least one" of the propositions
@@ -123,7 +109,7 @@ class FancyPropositions:
         return f"A.{self.data}"
 
 # Call your variables whatever you want
-a = FancyPropositions("a") #connected
+#a = Location() #connected
 b = FancyPropositions("b") #
 c = FancyPropositions("c")
 d = FancyPropositions("d")
@@ -137,7 +123,80 @@ e = FancyPropositions("e")
 x = FancyPropositions("x")
 y = FancyPropositions("y")
 z = FancyPropositions("z")
+#all possible setup for the whole grid
+location_propositions = []
+for l in LOCATIONS:
+    if(l == '10'):
+        location_propositions.append(Location(PIPE_TYPE[1], l))
+    elif(l == '34'):
+        location_propositions.append(Location(PIPE_TYPE[0], l))
+    else:
+        for i in range(2,len(PIPE_TYPE)):
+            p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
+            location_propositions.append(Location(p, l))
+            #constraint.at_most_k(E, 11) 
 
+#select one config 
+    grid_setup  = []
+    p=location_propositions[0]
+    grid_setup.append(p)
+    grid_setup.append(location_propositions[random.randint(2, len(PIPE_TYPE)-1)])
+    pos_for_10 = []
+    pos_for_11 = []
+    pos_for_12 = []
+    pos_for_13 = []
+    pos_for_21 = []
+    pos_for_22 = []
+    pos_for_23 = []
+    pos_for_31 = []
+    pos_for_32 = []
+    pos_for_33 = []
+    pos_for_34 = []
+    for i in range(len(location_propositions)):
+        if(i == 0):
+            pos_for_10.append(location_propositions[i])
+        elif(i<=10):
+            pos_for_11.append(location_propositions[i])
+        elif(i<=20):
+            pos_for_12.append(location_propositions[i])
+        elif(i<=30):
+            pos_for_13.append(location_propositions[i])
+        elif(i<=40):
+            pos_for_21.append(location_propositions[i])
+        elif(i<=50):
+            pos_for_22.append(location_propositions[i])
+        elif(i<=60):
+            pos_for_23.append(location_propositions[i])
+        elif(i<=70):
+            pos_for_31.append(location_propositions[i])
+        elif(i<=80):
+            pos_for_32.append(location_propositions[i])
+        elif(i<=90):
+            pos_for_33.append(location_propositions[i])
+        elif(i == len(location_propositions)-1):
+            pos_for_34.append(location_propositions[i])
+    #choose one from each array
+    #grid_setup.append(pos_for_10[i])
+    '''x = pos_for_11[random.randint(0,len(pos_for_11)-1)]
+    grid_setup.append(x)
+    p = pos_for_12[random.randint(0, len(pos_for_12)-1)]
+    grid_setup.append(p)
+    p = pos_for_13[random.randint(0, len(pos_for_13)-1)]
+    grid_setup.append(p)
+    p = pos_for_21[random.randint(0, len(pos_for_21)-1)]
+    grid_setup.append(p)
+    p = pos_for_22[random.randint(0, len(pos_for_22)-1)]
+    grid_setup.append(p)
+    p = pos_for_23[random.randint(0, len(pos_for_23)-1)]
+    grid_setup.append(p)
+    p = pos_for_31[random.randint(0, len(pos_for_31)-1)]
+    grid_setup.append(p)
+    p = pos_for_32[random.randint(0, len(pos_for_32)-1)]
+    grid_setup.append(p)
+    p = pos_for_33[random.randint(0, len(pos_for_33)-1)]
+    grid_setup.append(p)'''
+
+    
 
 # Build an example full theory for your setting and return it.
 #
@@ -145,7 +204,21 @@ z = FancyPropositions("z")
 #  This restriction is fairly minimal, and if there is any concern, reach out to the teaching staff to clarify
 #  what the expectations are.
 def example_theory():
-    # Add custom constraints by creating formulas with the variables you created. 
+    #all possible setup for the whole grid
+    location_propositions = []
+    for l in LOCATIONS:
+        if(l == '10'):
+            location_propositions.append(Location(PIPE_TYPE[1], l))
+        elif(l == '34'):
+            location_propositions.append(Location(PIPE_TYPE[0], l))
+        else:
+            for i in range(2,len(PIPE_TYPE)):
+                p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
+                location_propositions.append(Location(p, l))
+                constraint.at_most_k(E, 11) 
+    
+    
+    '''# Add custom constraints by creating formulas with the variables you created. 
     E.add_constraint((a | b) & ~x)
     # Implication
     E.add_constraint(y >> z)
@@ -153,7 +226,7 @@ def example_theory():
     E.add_constraint(~(x & y))
     # You can also add more customized "fancy" constraints. Use case: you don't want to enforce "exactly one"
     # for every instance of BasicPropositions, but you want to enforce it for a, b, and c.:
-    constraint.add_exactly_one(E, a, b, c)
+    constraint.add_exactly_one(E, a, b, c)'''
 
     return E
 
@@ -201,6 +274,7 @@ def win_condition(grid_setup):
 
 if __name__ == "__main__":
 
+
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
     T = T.compile()
@@ -215,17 +289,17 @@ if __name__ == "__main__":
         # Ensure that you only send these functions NNF formulas
         # Literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
-    print()
-    ORIENTATIONS = list('NSEW')
-
     '''for i in range(0, len(ORIENTATIONS)):
         orien1 = PIPE_TYPE[i]
         for j in range(i + 1, len(ORIENTATIONS)):
             orien2 = PIPE_TYPE[j]
 
             PIPE_TYPE = [orien1, orien2]'''
-
+    
     #print(PIPE_TYPE)
-    #print(len(location_propositions))
-    #print(CONNECTED)
+    #print(location_propositions)
+    #print(len(pos_for_11))
+
+    print(len(location_propositions))
+    
 
