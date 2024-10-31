@@ -137,64 +137,27 @@ for l in LOCATIONS:
             #constraint.at_most_k(E, 11) 
 
 #select one config 
-    grid_setup  = []
-    p=location_propositions[0]
-    grid_setup.append(p)
-    grid_setup.append(location_propositions[random.randint(2, len(PIPE_TYPE)-1)])
-    pos_for_10 = []
-    pos_for_11 = []
-    pos_for_12 = []
-    pos_for_13 = []
-    pos_for_21 = []
-    pos_for_22 = []
-    pos_for_23 = []
-    pos_for_31 = []
-    pos_for_32 = []
-    pos_for_33 = []
-    pos_for_34 = []
-    for i in range(len(location_propositions)):
-        if(i == 0):
-            pos_for_10.append(location_propositions[i])
-        elif(i<=10):
-            pos_for_11.append(location_propositions[i])
-        elif(i<=20):
-            pos_for_12.append(location_propositions[i])
-        elif(i<=30):
-            pos_for_13.append(location_propositions[i])
-        elif(i<=40):
-            pos_for_21.append(location_propositions[i])
-        elif(i<=50):
-            pos_for_22.append(location_propositions[i])
-        elif(i<=60):
-            pos_for_23.append(location_propositions[i])
-        elif(i<=70):
-            pos_for_31.append(location_propositions[i])
-        elif(i<=80):
-            pos_for_32.append(location_propositions[i])
-        elif(i<=90):
-            pos_for_33.append(location_propositions[i])
-        elif(i == len(location_propositions)-1):
-            pos_for_34.append(location_propositions[i])
-    #choose one from each array
-    #grid_setup.append(pos_for_10[i])
-    '''x = pos_for_11[random.randint(0,len(pos_for_11)-1)]
-    grid_setup.append(x)
-    p = pos_for_12[random.randint(0, len(pos_for_12)-1)]
-    grid_setup.append(p)
-    p = pos_for_13[random.randint(0, len(pos_for_13)-1)]
-    grid_setup.append(p)
-    p = pos_for_21[random.randint(0, len(pos_for_21)-1)]
-    grid_setup.append(p)
-    p = pos_for_22[random.randint(0, len(pos_for_22)-1)]
-    grid_setup.append(p)
-    p = pos_for_23[random.randint(0, len(pos_for_23)-1)]
-    grid_setup.append(p)
-    p = pos_for_31[random.randint(0, len(pos_for_31)-1)]
-    grid_setup.append(p)
-    p = pos_for_32[random.randint(0, len(pos_for_32)-1)]
-    grid_setup.append(p)
-    p = pos_for_33[random.randint(0, len(pos_for_33)-1)]
-    grid_setup.append(p)'''
+grid_setup  = []
+grid_setup.append(location_propositions[0])
+grid_setup.append(location_propositions[random.randint(1, 10)])
+p=location_propositions[random.randint(11, 20)]
+grid_setup.append(p)
+p=location_propositions[random.randint(21, 30)]
+grid_setup.append(p)
+p=location_propositions[random.randint(31, 40)]
+grid_setup.append(p)
+p=location_propositions[random.randint(41, 50)]
+grid_setup.append(p)
+p=location_propositions[random.randint(51, 60)]
+grid_setup.append(p) 
+p=location_propositions[random.randint(61, 70)]
+grid_setup.append(p)
+p=location_propositions[random.randint(71, 80)]
+grid_setup.append(p)
+p=location_propositions[random.randint(81, 90)]
+grid_setup.append(p)
+grid_setup.append(location_propositions[len(location_propositions)-1])
+   
 
     
 
@@ -256,9 +219,7 @@ if __name__ == "__main__":
             PIPE_TYPE = [orien1, orien2]'''
     
     #print(PIPE_TYPE)
-    #print(location_propositions)
+    print(len(location_propositions))
     #print(len(pos_for_11))
 
-    print(len(location_propositions))
-    
-
+    print(grid_setup)
