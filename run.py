@@ -1,5 +1,5 @@
 
-from bauhaus import Encoding, proposition, constraint
+from bauhaus import Encoding, proposition, constraint, And, Or
 from bauhaus.utils import count_solutions, likelihood
 
 # These two lines make sure a faster SAT solver is used.
@@ -107,7 +107,25 @@ class Connected(object):
 
     def _prop_name(self):
         return f"Connected({self.pipe1}, {self.pipe2})"
+@proposition(E)
+class striant(object):
+    def __init__(self, pipe) -> None:
+        assert pipe in PIPE_TYPE
+        self.pipe = pipe
 
+    def _prop_name(self):
+        return f"PipeType({self.pipe})"
+    
+@proposition(E)
+class Neighbor(object):
+    def __init__(self, loc1, loc2) -> None:
+        assert loc1 in LOCATIONS
+        assert loc2 in LOCATIONS
+        self.loc1 = loc1
+        self.loc2 = loc2
+
+    def _prop_name(self):
+        return f"[{self.loc1} --> {self.loc2}]"
 
 
 @constraint.at_least_one(E)
@@ -170,33 +188,35 @@ def example_theory():
     p=location_propositions[random.randint(81, 90)]
     grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
-    constraint.add_exactly_one(E, grid_setup)
+    E.add_constraint(And(grid_setup))#imply the there are different orientation for the setup with all same pipe
     
     connected_pipe = []
+    pair_pipe = []
     #TODO change the pipe1 and pipe2 to pipe in the grid_setup;
     # it means we need to chack every pair of neibour to see if they are connected
     #if they are connected, add them to constriant
     #loop through UD and LR
-    for i in range(0,len(grid_setup)-1):
+    for i in range(0,len(grid_setup)):
         for connectLR in NEIGHBORLR:
-            if connectLR[0] in grid_setup[i] and connectLR[1] in grid_setup[i+1]:
-                connected_pipe.append(grid_setup[i])
-                connected_pipe.append(grid_setup[i+1])
-                break
-            elif connectLR[0] in grid_setup[i+1] and connectLR[1] in grid_setup[i]:
-                connected_pipe.append(grid_setup[i+1])
-                connected_pipe.append(grid_setup[i])
-                break
-                
-        for connectUD in NEIGHBORUD:
-            if connectUD[0] in grid_setup[i] and connectUD[1] in grid_setup[i+1]:
-                connected_pipe.append(grid_setup[i])
-                connected_pipe.append(grid_setup[i+1])
-                break
-            elif connectUD[0] in grid_setup[i+1] and connectUD[1] in grid_setup[i]:
-                connected_pipe.append(grid_setup[i+1])
-                connected_pipe.append(grid_setup[i])
-    constraint.at_most(k)     
+            if connectLR[0] == grid_setup[i].location and connectLR[1] == grid_setup[i+1].location:
+                if "E" in grid_setup[i].pipe and "W" in grid_setup[i+1].pipe:
+                    pair_pipe.append(grid_setup[i])
+                    pair_pipe.append(grid_setup[i+1])
+                    connected_pipe.append(pair_pipe)
+                    pair_pipe = []
+                    break
+    for i in range(0,2):
+        for j in range(1,4):            
+            for connectUD in NEIGHBORUD:
+                if connectUD[0] == grid_setup[j+ 3*i].location and connectUD[1] == grid_setup[j+3*(i+1)].location:
+                    if "S" in grid_setup[j+ 3*i].pipe and "N" in grid_setup[j+3*(i+1)].pipe:
+                        pair_pipe.append(grid_setup[j+ 3*i])
+                        pair_pipe.append(grid_setup[j+3*(i+1)])
+                        connected_pipe.append(pair_pipe)
+                        pair_pipe = []
+                        break
+
+    E.add_constraint(And(connected_pipe))
     
     #all possible connection [E,[E,W]]
     possible_connectionsud = []
@@ -219,9 +239,23 @@ def example_theory():
                     for a in k:
                         if a == "W":
                             c=[i,k]
-                            possible_connectionslr.appenda
+                            possible_connectionslr.append(c)
     possible_connectionslr.remove([['E'], ['W']])
     constraint.add_exactly_one(E, possible_connectionslr)
+
+        #for one location, there are at least one and at most 4 neighbor
+    all_possible_neighbor = []
+    for l in LOCATIONS:
+        possible_neighbor = []
+        for nud in NEIGHBORUD:
+            if l in nud:
+                possible_neighbor.append(Neighbor(nud[0],nud[1]))
+        for nud in NEIGHBORLR:
+            if l in nud:
+                possible_neighbor.append(Neighbor(nud[0],nud[1]))
+        all_possible_neighbor.append(possible_neighbor)
+    constraint.add_exactly_one(E, all_possible_neighbor)
+
     #write a connected function to check if two pipes are connected
     #to do this we have to do for 3 things 
     '''
@@ -250,6 +284,62 @@ def example_theory():
 
 
 if __name__ == "__main__":
+    location_propositions = []
+    for l in LOCATIONS:
+        if(l == '10'):
+            location_propositions.append(Location(PIPE_TYPE[1], l))
+        elif(l == '34'):
+            location_propositions.append(Location(PIPE_TYPE[0], l))
+        else:
+            for i in range(2,len(PIPE_TYPE)):
+                p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
+                location_propositions.append(Location(p, l))
+
+    grid_setup  = []
+    grid_setup.append(location_propositions[0])
+    grid_setup.append(location_propositions[random.randint(1, 10)])
+    p=location_propositions[random.randint(11, 20)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(21, 30)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(31, 40)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(41, 50)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(51, 60)]
+    grid_setup.append(p) 
+    p=location_propositions[random.randint(61, 70)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(71, 80)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(81, 90)]
+    grid_setup.append(p)
+    grid_setup.append(location_propositions[len(location_propositions)-1])
+    connected_pipe = []
+    pair_pipe = []
+    #TODO change the pipe1 and pipe2 to pipe in the grid_setup;
+    # it means we need to chack every pair of neibour to see if they are connected
+    #if they are connected, add them to constriant
+    #loop through UD and LR
+    for i in range(0,len(grid_setup)):
+        for connectLR in NEIGHBORLR:
+            if connectLR[0] == grid_setup[i].location and connectLR[1] == grid_setup[i+1].location:
+                if "E" in grid_setup[i].pipe and "W" in grid_setup[i+1].pipe:
+                    pair_pipe.append(grid_setup[i])
+                    pair_pipe.append(grid_setup[i+1])
+                    connected_pipe.append(pair_pipe)
+                    pair_pipe = []
+                    break
+    for i in range(0,2):
+        for j in range(1,4):            
+            for connectUD in NEIGHBORUD:
+                if connectUD[0] == grid_setup[j+ 3*i].location and connectUD[1] == grid_setup[j+3*(i+1)].location:
+                    if "S" in grid_setup[j+ 3*i].pipe and "N" in grid_setup[j+3*(i+1)].pipe:
+                        pair_pipe.append(grid_setup[j+ 3*i])
+                        pair_pipe.append(grid_setup[j+3*(i+1)])
+                        connected_pipe.append(pair_pipe)
+                        pair_pipe = []
+                        break
 
 
     T = example_theory()
@@ -266,9 +356,12 @@ if __name__ == "__main__":
         # Ensure that you only send these functions NNF formulas
         # Literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
+
+
     
+    print(f"connect: {connected_pipe}")
     #print(PIPE_TYPE)
     #print(len(location_propositions))
     #print(len(pos_for_11))
-
-    #print(grid_setup)
+    #print(possible_connectionsud)
+    print(f"grid setup: {grid_setup}")
