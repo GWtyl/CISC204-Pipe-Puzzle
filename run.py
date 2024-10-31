@@ -18,9 +18,7 @@ ORIENTATIONS = list('NSEW')
 #     S   
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
 
-#win condition: go through neighbor array and make sure every pair of neighbor is connected
 NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23','33']]
-
 NEIGHBORLR = [['10','11'],['11','12'],['12','13'],['21','22'],['22','23'],['31','32'],
             ['32','33'],['33','34']]
 
@@ -42,26 +40,7 @@ for i in range(0, len(ORIENTATIONS)):
             PIPE_TYPE.append(p)
 #print(pipe_type)
 
-CONNECTED = []
-for i in PIPE_TYPE:
-    for j in i:
-        if j == "S":
-            for x in PIPE_TYPE:
-                for y in x:
-                    if x == "N":
-                        c=[i,x]
-                        CONNECTED.append(c)    
-        else:
-            break  #check: only break 1 loop
-for i in PIPE_TYPE:
-    for j in i:
-        if j == "E":
-            for k in PIPE_TYPE:
-                for a in k:
-                    if a == "W":
-                        c=[i,k]
-                        CONNECTED.append(c)
-CONNECTED.remove([['E'], ['W']])
+
 
 #a pipe at this location
 @proposition(E)
@@ -97,40 +76,33 @@ class PipeType(object):
 
     def _prop_name(self):
         return f"PipeType({self.pipe})"
+
 @proposition(E)
-class Connected(object):
-    def __init__(self, pipe1, pipe2) -> None:
-        assert pipe1 in PIPE_TYPE
-        assert pipe2 in PIPE_TYPE
-        self.pipe1 = pipe1
-        self.pipe2 = pipe2
+class Neighbor(object):
+    def __init__(self, loc1, loc2) -> None:
+        assert loc1 in LOCATIONS
+        assert loc2 in LOCATIONS
+        self.loc1 = loc1
+        self.loc2 = loc2
 
     def _prop_name(self):
-        return f"Connected({self.pipe1}, {self.pipe2})"
-
-
-
-@constraint.at_least_one(E)
+        return f"[{self.loc1} --> {self.loc2}]"
 @proposition(E)
-class FancyPropositions:
-
-    def __init__(self, data):
-        self.data = data
-
+class FancyPropositions(object):
+    def __init__(self, data) -> None:
+        assert data
     def _prop_name(self):
-        return f"A.{self.data}"
-
+        return f"[data]"
 # Call your variables whatever you want
 a = Location(['E'],'10')# there must have a start piece at 10
 b = Location(['W'],'34')# there must have a end piece at 34
 c = FancyPropositions("c")
-d = FancyPropositions("d")
-e = FancyPropositions("e")
+x = Location(['E'],'10')# there must have a start piece at 10
+y = Location(['W'],'34')# there must have a end piece at 34
+z = FancyPropositions("c")
 
 # At least one of these will be true
-x = FancyPropositions("x")
-y = FancyPropositions("y")
-z = FancyPropositions("z")
+#x,y,z
 
 #  There should be at least 10 variables, and a sufficiently large formula to describe it (>50 operators).
 #  This restriction is fairly minimal, and if there is any concern, reach out to the teaching staff to clarify
@@ -149,6 +121,7 @@ def example_theory():
                 p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
                 location_propositions.append(Location(p, l))
     #select one config; also made sure we have exactly one pipe on each location
+    #[[E]@10]
     grid_setup  = []
     grid_setup.append(location_propositions[0])
     grid_setup.append(location_propositions[random.randint(1, 10)])
@@ -170,7 +143,46 @@ def example_theory():
     grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
     constraint.add_exactly_one(E, grid_setup)
+
+    #all possible connection [E,[E,W]]
+    '''possible_connectionsud = []
+    for i in PIPE_TYPE:
+        for j in i:
+            if j == "S":
+                for x in PIPE_TYPE:
+                    for y in x:
+                        if x == "N":
+                            c=[i,x]
+                            possible_connectionsud.append(c)    
+            else:
+                break  
+    constraint.add_exactly_one(E, possible_connectionsud)
+    possible_connectionslr = []
+    for i in PIPE_TYPE:
+        for j in i:
+            if j == "E":
+                for k in PIPE_TYPE:
+                    for a in k:
+                        if a == "W":
+                            c=[i,k]
+                            possible_connectionslr.append(c)
+    possible_connectionslr.remove([['E'], ['W']])
+    constraint.add_exactly_one(E, possible_connectionslr)'''
     
+    #for one location, there are at least one and at most 4 neighbor
+    all_possible_neighbor = []
+    for l in LOCATIONS:
+        possible_neighbor = []
+        for nud in NEIGHBORUD:
+            if l in nud:
+                possible_neighbor.append(Neighbor(nud[0],nud[1]))
+        for nud in NEIGHBORLR:
+            if l in nud:
+                possible_neighbor.append(Neighbor(nud[0],nud[1]))
+        all_possible_neighbor.append(possible_neighbor)
+    constraint.add_exactly_one(E, all_possible_neighbor)
+
+
     #TODO change the pipe1 and pipe2 to pipe in the grid_setup;
     # it means we need to chack every pair of neibour to see if they are connected
     #if they are connected, add them to constriant
@@ -203,8 +215,6 @@ def example_theory():
 
 
 if __name__ == "__main__":
-
-
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
     T = T.compile()
@@ -219,9 +229,10 @@ if __name__ == "__main__":
         # Ensure that you only send these functions NNF formulas
         # Literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
-    
-    #print(PIPE_TYPE)
+      
+                  
+    #print(possible_connectionsud)
     #print(len(location_propositions))
     #print(len(pos_for_11))
 
-    #print(grid_setup)
+    #print(PIPE_TYPE)
