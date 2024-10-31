@@ -42,26 +42,7 @@ for i in range(0, len(ORIENTATIONS)):
             PIPE_TYPE.append(p)
 #print(pipe_type)
 
-CONNECTED = []
-for i in PIPE_TYPE:
-    for j in i:
-        if j == "S":
-            for x in PIPE_TYPE:
-                for y in x:
-                    if x == "N":
-                        c=[i,x]
-                        CONNECTED.append(c)    
-        else:
-            break  #check: only break 1 loop
-for i in PIPE_TYPE:
-    for j in i:
-        if j == "E":
-            for k in PIPE_TYPE:
-                for a in k:
-                    if a == "W":
-                        c=[i,k]
-                        CONNECTED.append(c)
-CONNECTED.remove([['E'], ['W']])
+
 
 #a pipe at this location
 @proposition(E)
@@ -150,23 +131,24 @@ x = FancyPropositions("x")
 y = FancyPropositions("y")
 z = FancyPropositions("z")
 
+#all possible setup for the whole grid
+location_propositions = []
+for l in LOCATIONS:
+    if(l == '10'):
+        location_propositions.append(Location(PIPE_TYPE[1], l))
+    elif(l == '34'):
+        location_propositions.append(Location(PIPE_TYPE[0], l))
+    else:
+        for i in range(2,len(PIPE_TYPE)):
+            p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
+            location_propositions.append(Location(p, l))
 #  There should be at least 10 variables, and a sufficiently large formula to describe it (>50 operators).
 #  This restriction is fairly minimal, and if there is any concern, reach out to the teaching staff to clarify
 #  what the expectations are.
 #  Change the name to something else. This is still using the example name
 def example_theory():
     
-    #all possible setup for the whole grid
-    location_propositions = []
-    for l in LOCATIONS:
-        if(l == '10'):
-            location_propositions.append(Location(PIPE_TYPE[1], l))
-        elif(l == '34'):
-            location_propositions.append(Location(PIPE_TYPE[0], l))
-        else:
-            for i in range(2,len(PIPE_TYPE)):
-                p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
-                location_propositions.append(Location(p, l))
+    
     #select one config; also made sure we have exactly one pipe on each location
     grid_setup  = []
     grid_setup.append(location_propositions[0])
@@ -192,9 +174,7 @@ def example_theory():
     
     connected_pipe = []
     pair_pipe = []
-    #TODO change the pipe1 and pipe2 to pipe in the grid_setup;
-    # it means we need to chack every pair of neibour to see if they are connected
-    #if they are connected, add them to constriant
+    #check if how many pairs on grid is connected.if they are connected, add them to constriant
     #loop through UD and LR
     for i in range(0,len(grid_setup)):
         for connectLR in NEIGHBORLR:
@@ -243,7 +223,7 @@ def example_theory():
     possible_connectionslr.remove([['E'], ['W']])
     constraint.add_exactly_one(E, possible_connectionslr)
 
-        #for one location, there are at least one and at most 4 neighbor
+    #for one location, there are at least one and at most 4 neighbor
     all_possible_neighbor = []
     for l in LOCATIONS:
         possible_neighbor = []
@@ -255,18 +235,29 @@ def example_theory():
                 possible_neighbor.append(Neighbor(nud[0],nud[1]))
         all_possible_neighbor.append(possible_neighbor)
     constraint.add_exactly_one(E, all_possible_neighbor)
-
+    #TODO: add constriant for grid_setup
+    #TODO: give out a solution based on the grid_setup and connected_pipe
+    #start and end piece ['E'] and ['W'] will not be connected directly
+    E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '11'))
+    #start and end piece ['E'] and ['W'] need to be at 10 and 34
+    E.add_constraint(Location(['E'],'10'))
+    E.add_constraint(Location(['W'],'34'))
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S'],'33')))>>(Location(['E', 'W'],'33')))
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S'],'33')))>>(Location(['E', 'W'],'33')))
+    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[0].pipe, '10', '11') & (Location(['N', 'S'], '11'))) >> (Location(['E', 'W'], '11')))
+    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[0].pipe, '10', '11') & (Location(['N', 'S'], '11'))) >> (Location(['E', 'W'], '11')))
     return E
 
 
 if __name__ == "__main__":
-
+    #[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
+    #print(PIPE_TYPE)
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
     T = T.compile()
     # After compilation (and only after), you can check some of the properties
     # of your model:
-    print("\nSatisfiable: %s" % T.satisfiable())
+    '''print("\nSatisfiable: %s" % T.satisfiable())
     print("# Solutions: %d" % count_solutions(T))
     print("   Solution: %s" % T.solve())
 
@@ -275,11 +266,12 @@ if __name__ == "__main__":
         # Ensure that you only send these functions NNF formulas
         # Literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
-
+    '''
+    #E.introspect(T)
 
     
     #print(f"connect: {connected_pipe}")
-    #print(PIPE_TYPE)
+    
     #print(len(location_propositions))
     #print(len(pos_for_11))
     #print(possible_connectionsud)
