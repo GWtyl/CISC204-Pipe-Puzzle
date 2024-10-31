@@ -134,7 +134,7 @@ for l in LOCATIONS:
         for i in range(2,len(PIPE_TYPE)):
             p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
             location_propositions.append(Location(p, l))
-            #constraint.at_most_k(E, 11) 
+            constraint.at_most_k(E, 11) 
 
 #select one config 
 grid_setup  = []
@@ -157,7 +157,7 @@ grid_setup.append(p)
 p=location_propositions[random.randint(81, 90)]
 grid_setup.append(p)
 grid_setup.append(location_propositions[len(location_propositions)-1])
-   
+constraint.add_exactly_one(E, grid_setup)   
 
     
 
@@ -232,7 +232,6 @@ def win_condition(grid_setup):
     for i in range(0, len(grid_setup)):
         if  not pipe_connected(grid_setup[i], grid_setup[i+1]):
             return False
-    
     return True
 
 if __name__ == "__main__":
