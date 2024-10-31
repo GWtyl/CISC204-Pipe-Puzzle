@@ -63,7 +63,7 @@ for i in PIPE_TYPE:
                         CONNECTED.append(c)
 CONNECTED.remove([['E'], ['W']])
 
-# To create propositions, create classes for them first, annotated with "@proposition" and the Encoding
+#a pipe at this location
 @proposition(E)
 class Location(object): 
     def __init__(self, pipe, location) -> None:
@@ -74,8 +74,6 @@ class Location(object):
     def _prop_name(self):
         return f"({self.pipe} @ {self.location})"
     
-#TODO: get the setup and check if two pipe is connected and then put them into 
-#TODO checked list
 #two pipe  at these location is connected
 @proposition(E)
 class TwoPipeConnection(object):
@@ -91,13 +89,27 @@ class TwoPipeConnection(object):
 
     def _prop_name(self):
         return f"({self.pipe1}@{self.location1} -> {self.pipe2}@{self.location1})"
+@proposition(E)
+class PipeType(object):
+    def __init__(self, pipe) -> None:
+        assert pipe in PIPE_TYPE
+        self.pipe = pipe
+
+    def _prop_name(self):
+        return f"PipeType({self.pipe})"
+@proposition(E)
+class Connected(object):
+    def __init__(self, pipe1, pipe2) -> None:
+        assert pipe1 in PIPE_TYPE
+        assert pipe2 in PIPE_TYPE
+        self.pipe1 = pipe1
+        self.pipe2 = pipe2
+
+    def _prop_name(self):
+        return f"Connected({self.pipe1}, {self.pipe2})"
 
 
-# Different classes for propositions are useful because this allows for more dynamic constraint creation
-# for propositions within that class. For example, you can enforce that "at least one" of the propositions
-# that are instances of this class must be true by using a @constraint decorator.
-# other options include: at most one, exactly one, at most k, and implies all.
-# For a complete module reference, see https://bauhaus.readthedocs.io/en/latest/bauhaus.html
+
 @constraint.at_least_one(E)
 @proposition(E)
 class FancyPropositions:
@@ -109,64 +121,22 @@ class FancyPropositions:
         return f"A.{self.data}"
 
 # Call your variables whatever you want
-#a = Location() #connected
-b = FancyPropositions("b") #
+a = Location(['E'],'10')# there must have a start piece at 10
+b = Location(['W'],'34')# there must have a end piece at 34
 c = FancyPropositions("c")
 d = FancyPropositions("d")
 e = FancyPropositions("e")
-a = FancyPropositions("a") #connected
-b = FancyPropositions("b") #
-c = FancyPropositions("c")
-d = FancyPropositions("d")
-e = FancyPropositions("e")
+
 # At least one of these will be true
 x = FancyPropositions("x")
 y = FancyPropositions("y")
 z = FancyPropositions("z")
-#all possible setup for the whole grid
-location_propositions = []
-for l in LOCATIONS:
-    if(l == '10'):
-        location_propositions.append(Location(PIPE_TYPE[1], l))
-    elif(l == '34'):
-        location_propositions.append(Location(PIPE_TYPE[0], l))
-    else:
-        for i in range(2,len(PIPE_TYPE)):
-            p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
-            location_propositions.append(Location(p, l))
-            constraint.at_most_k(E, 11) 
 
-#select one config 
-grid_setup  = []
-grid_setup.append(location_propositions[0])
-grid_setup.append(location_propositions[random.randint(1, 10)])
-p=location_propositions[random.randint(11, 20)]
-grid_setup.append(p)
-p=location_propositions[random.randint(21, 30)]
-grid_setup.append(p)
-p=location_propositions[random.randint(31, 40)]
-grid_setup.append(p)
-p=location_propositions[random.randint(41, 50)]
-grid_setup.append(p)
-p=location_propositions[random.randint(51, 60)]
-grid_setup.append(p) 
-p=location_propositions[random.randint(61, 70)]
-grid_setup.append(p)
-p=location_propositions[random.randint(71, 80)]
-grid_setup.append(p)
-p=location_propositions[random.randint(81, 90)]
-grid_setup.append(p)
-grid_setup.append(location_propositions[len(location_propositions)-1])
-constraint.add_exactly_one(E, grid_setup)   
-
-    
-
-# Build an example full theory for your setting and return it.
-#
 #  There should be at least 10 variables, and a sufficiently large formula to describe it (>50 operators).
 #  This restriction is fairly minimal, and if there is any concern, reach out to the teaching staff to clarify
 #  what the expectations are.
 def example_theory():
+    
     #all possible setup for the whole grid
     location_propositions = []
     for l in LOCATIONS:
@@ -178,61 +148,59 @@ def example_theory():
             for i in range(2,len(PIPE_TYPE)):
                 p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
                 location_propositions.append(Location(p, l))
-                constraint.at_most_k(E, 11) 
+    #select one config; also made sure we have exactly one pipe on each location
+    grid_setup  = []
+    grid_setup.append(location_propositions[0])
+    grid_setup.append(location_propositions[random.randint(1, 10)])
+    p=location_propositions[random.randint(11, 20)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(21, 30)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(31, 40)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(41, 50)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(51, 60)]
+    grid_setup.append(p) 
+    p=location_propositions[random.randint(61, 70)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(71, 80)]
+    grid_setup.append(p)
+    p=location_propositions[random.randint(81, 90)]
+    grid_setup.append(p)
+    grid_setup.append(location_propositions[len(location_propositions)-1])
+    constraint.add_exactly_one(E, grid_setup)
     
-    
-    '''# Add custom constraints by creating formulas with the variables you created. 
-    E.add_constraint((a | b) & ~x)
-    # Implication
-    E.add_constraint(y >> z)
-    # Negate a formula
-    E.add_constraint(~(x & y))
-    # You can also add more customized "fancy" constraints. Use case: you don't want to enforce "exactly one"
-    # for every instance of BasicPropositions, but you want to enforce it for a, b, and c.:
-    constraint.add_exactly_one(E, a, b, c)'''
+    #TODO change the pipe1 and pipe2 to pipe in the grid_setup;
+    # it means we need to chack every pair of neibour to see if they are connected
+    #if they are connected, add them to constriant
+
+    #write a connected function to check if two pipes are connected
+    #to do this we have to do for 3 things 
+    '''
+    1. check if they are neighbors
+    2. check if they are facing the same direction
+    3. if these conditions are met put them into the  Connected list
+    '''
+    #this is only to check if they are connected and if they are beside eachother on the x axis(left and right)
+    #first check the location to see if they are next to each other and the check if the pipe is facting the same directio
+
+    #calls this function from twopipeconnection class to say two pipe is connected
+    #TwoPipeConnection(pipe1,pipe2,location1,location2) 
+    '''for nbor in NEIGHBORUD:
+        if (nbor[0] in pipe1 and nbor[1] in pipe2):
+            if "N" in pipe1 and "S" in pipe2:
+                constraint.add_exactly_one.TwoPipeConnection(pipe1,pipe2,l1,l2)
+        elif (nbor[0] in pipe2 and nbor[1] in pipe1):
+            if "N" in pipe2 and "S" in pipe1:
+                constraint.add_exactly_one(E,TwoPipeConnection(pipe1,pipe2,l1,l2))
+    for i in range(0, len(grid_setup)):
+        if  not pipe_connected(grid_setup[i], grid_setup[i+1]):
+            break
+    constraint.add_exactly_one(E,TwoPipeConnection(pipe1,pipe2,l1,l2))'''
 
     return E
 
-#TODO: write a connected function to check if two pipes are connected
-#to do this we have to do for 3 things 
-'''
-1. check if they are neighbors
-2. check if they are facing the same direction
-3. if these conditions are met put them into the  Connected list
-'''
-#this is only to check if they are connected and if they are beside eachother on the x axis(left and right)
-#first check the location to see if they are next to each other and the check if the pipe is facting the same direction
-def pipe_connected(pipe1, pipe2):
-    
-    #calls this function from twopipeconnection class to check if the location and pipe exists
-    #TwoPipeConnection.__init__(pipe1,pipe2,location1,location2) 
-    
-    for nbor in NEIGHBORLR:
-        
-        #check if they are neighbor ( neighbor is always counted from left to right) 
-        if (nbor[0] in pipe1 and nbor[1] in pipe2):
-            if "E" in pipe1 and "W" in pipe2:
-                return True
-        elif (nbor[0] in pipe2 and nbor[1] in pipe1):
-            if "E" in pipe2 and "W" in pipe1:
-                return True
-            
-    for nbor in NEIGHBORUD:
-        if (nbor[0] in pipe1 and nbor[1] in pipe2):
-            if "N" in pipe1 and "S" in pipe2:
-                return True
-        elif (nbor[0] in pipe2 and nbor[1] in pipe1):
-            if "N" in pipe2 and "S" in pipe1:
-                return True
-    return False
-  
-  
-#(["N","E","S"] @ 3.3) 
-def win_condition(grid_setup):
-    for i in range(0, len(grid_setup)):
-        if  not pipe_connected(grid_setup[i], grid_setup[i+1]):
-            return False
-    return True
 
 if __name__ == "__main__":
 
@@ -251,15 +219,9 @@ if __name__ == "__main__":
         # Ensure that you only send these functions NNF formulas
         # Literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
-    '''for i in range(0, len(ORIENTATIONS)):
-        orien1 = PIPE_TYPE[i]
-        for j in range(i + 1, len(ORIENTATIONS)):
-            orien2 = PIPE_TYPE[j]
-
-            PIPE_TYPE = [orien1, orien2]'''
     
     #print(PIPE_TYPE)
-    print(len(location_propositions))
+    #print(len(location_propositions))
     #print(len(pos_for_11))
 
-    print(grid_setup)
+    #print(grid_setup)
