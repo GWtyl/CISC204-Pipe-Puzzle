@@ -1,5 +1,5 @@
 
-from bauhaus import Encoding, proposition, constraint
+from bauhaus import Encoding, proposition, constraint, And, Or
 from bauhaus.utils import count_solutions, likelihood
 
 # These two lines make sure a faster SAT solver is used.
@@ -87,12 +87,15 @@ class Neighbor(object):
 
     def _prop_name(self):
         return f"[{self.loc1} --> {self.loc2}]"
+
+    
 @proposition(E)
 class FancyPropositions(object):
     def __init__(self, data) -> None:
         assert data
     def _prop_name(self):
         return f"[data]"
+    
 # Call your variables whatever you want
 a = Location(['E'],'10')# there must have a start piece at 10
 b = Location(['W'],'34')# there must have a end piece at 34
@@ -121,7 +124,7 @@ def example_theory():
                 p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
                 location_propositions.append(Location(p, l))
     #select one config; also made sure we have exactly one pipe on each location
-    #[[E]@10]
+    #[[[E]@10],[]]
     grid_setup  = []
     grid_setup.append(location_propositions[0])
     grid_setup.append(location_propositions[random.randint(1, 10)])
@@ -142,7 +145,8 @@ def example_theory():
     p=location_propositions[random.randint(81, 90)]
     grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
-    constraint.add_exactly_one(E, grid_setup)
+    E.add_constraint(And(grid_setup))#imply the there are different orientation for the setup with all same pipe
+    
 
     #all possible connection [E,[E,W]]
     '''possible_connectionsud = []
