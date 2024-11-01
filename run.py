@@ -243,9 +243,18 @@ def example_theory():
     E.add_constraint(Location(['E'],'10'))
     E.add_constraint(Location(['W'],'34'))
     E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S'],'33')))>>(Location(['E', 'W'],'33')))
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S'],'33')))>>(Location(['E', 'W'],'33')))
+    
     E.add_constraint((~TwoPipeConnection(['E'], grid_setup[0].pipe, '10', '11') & (Location(['N', 'S'], '11'))) >> (Location(['E', 'W'], '11')))
-    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[0].pipe, '10', '11') & (Location(['N', 'S'], '11'))) >> (Location(['E', 'W'], '11')))
+    #corner 33 34
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['W', 'N'],'33')) | (Location(['W','S']))| (Location(['S','E']))))>>(Location(['E', 'N'],'33')))
+    #corner 10 11
+    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[len(grid_setup)-1].pipe, '10', '11') & ((Location(['W', 'N'],'33')) | (Location(['W','S']))| (Location(['N','E']))))>>(Location(['W', 'S'],'33')))
+
+    # T shape 33 34
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S','W'],'33')))>>((Location(['E', 'W','N'],'33'))|(Location(['E', 'S','N'],'33'))|(Location(['E', 'W','S'],'33'))))
+
+    # T shape 10 11
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '10', '11')&(Location(['N', 'S','E'],'33')))>>((Location(['E', 'W','N'],'33'))|(Location(['W', 'S','N'],'33'))|(Location(['E', 'W','S'],'33'))))
     return E
 
 
