@@ -255,6 +255,7 @@ def example_theory():
 
     # T shape 10 11
     E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '10', '11')&(Location(['N', 'S','E'],'33')))>>((Location(['N', 'E', 'W'],'33'))|(Location(['N', 'S', 'W'],'33'))|(Location(['S', 'E', 'W'],'33'))))
+    
     return E
 
 
@@ -266,7 +267,7 @@ if __name__ == "__main__":
     T = T.compile()
     # After compilation (and only after), you can check some of the properties
     # of your model:
-    print("\nSatisfiable: %s" % T.satisfiable())
+    '''print("\nSatisfiable: %s" % T.satisfiable())
     print("# Solutions: %d" % count_solutions(T))
     print("   Solution: %s" % T.solve())
 
@@ -274,7 +275,7 @@ if __name__ == "__main__":
     for v,vn in zip([a,b,c,x,y,z], 'abcxyz'):
         # Ensure that you only send these functions NNF formulas
         # Literals are compiled to NNF here
-        print(" %s: %.2f" % (vn, likelihood(T, v)))
+        print(" %s: %.2f" % (vn, likelihood(T, v)))'''
     
     #E.introspect(T)
 

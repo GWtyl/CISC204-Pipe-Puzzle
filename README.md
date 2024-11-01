@@ -13,6 +13,5 @@ and provide pointers to the general structure of the repository. How you organiz
 **documents/draft/modelling_report_draft.docx contains the draft of report
 * `run.py`: General wrapper script that you can choose to use or not. Only requirement is that you implement the one function inside of there for the auto-checks.
 * `test.py`: Run this file to confirm that your submission has everything required. This essentially just means it will check for the right files and sufficient theory size.
-*'nobauhaustest.py': a file to test things in example theory.(Please don't run this)
 
 
