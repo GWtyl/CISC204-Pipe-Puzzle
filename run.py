@@ -175,15 +175,15 @@ def example_theory():
 
     #all possible routes for the grid
     routes = []
-    def find_path(i,j,path):
-        if (i,j) == (3,4):
+    path = []
+    all_neighbor = NEIGHBORLR + NEIGHBORUD
+
+    def find_path(i,path):
+        if "3,4" in grid_setup[i].location:
             routes.append(path)
             return
-        pipe_type = grid_setup[x][y]
-        for di, dj in NEIGHBORLR[pipe_type]:
-            ni, nj = i + di, j + dj
-        find_path(ni, nj, path + [(ni, nj)])
-    find_path(grid_setup[0], grid_setup[1], [grid_setup])    
+        
+         
 
     connected_pipe = []
     pair_pipe = []
@@ -236,6 +236,7 @@ def example_theory():
     possible_connectionslr.remove([['E'], ['W']])
     constraint.add_exactly_one(E, possible_connectionslr)
 
+    
     #for one location, there are at least one and at most 4 neighbor
     all_possible_neighbor = []
     for l in LOCATIONS:
