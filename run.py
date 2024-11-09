@@ -172,6 +172,14 @@ def example_theory():
     grid_setup.append(location_propositions[len(location_propositions)-1])
     E.add_constraint(And(*grid_setup))#imply the there are different orientation for the setup with all same pipe
     
+
+    #all possible routes for the grid
+    route = []
+    while(True):
+        for i in range(0,len(grid_setup)-1):
+            route.append(TwoPipeConnection(grid_setup[i].pipe, grid_setup[i+1].pipe, grid_setup[i].location, grid_setup[i+1].location))
+        break
+
     connected_pipe = []
     pair_pipe = []
     #check if how many pairs on grid is connected.if they are connected, add them to constriant
@@ -243,7 +251,6 @@ def example_theory():
     E.add_constraint(Location(['E'],'10'))
     E.add_constraint(Location(['W'],'34'))
     E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S'],'33')))>>(Location(['E', 'W'],'33')))
-    
     E.add_constraint((~TwoPipeConnection(['E'], grid_setup[0].pipe, '10', '11') & (Location(['N', 'S'], '11'))) >> (Location(['E', 'W'], '11')))
     #corner 33 34
     E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['S','E'],'33'))))>>(Location(['N', 'E'],'33')))
@@ -278,7 +285,8 @@ if __name__ == "__main__":
         print(" %s: %.2f" % (vn, likelihood(T, v)))'''
     
     #E.introspect(T)
-
+    # Check if the problem has any solution and find all solutions
+    
     
     #print(f"connect: {connected_pipe}")
     
