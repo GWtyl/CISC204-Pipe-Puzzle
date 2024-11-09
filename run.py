@@ -174,11 +174,16 @@ def example_theory():
     
 
     #all possible routes for the grid
-    route = []
-    while(True):
-        for i in range(0,len(grid_setup)-1):
-            route.append(TwoPipeConnection(grid_setup[i].pipe, grid_setup[i+1].pipe, grid_setup[i].location, grid_setup[i+1].location))
-        break
+    routes = []
+    def find_path(i,j,path):
+        if (i,j) == (3,4):
+            routes.append(path)
+            return
+        pipe_type = grid_setup[x][y]
+        for di, dj in NEIGHBORLR[pipe_type]:
+            ni, nj = i + di, j + dj
+        find_path(ni, nj, path + [(ni, nj)])
+    find_path(grid_setup[0], grid_setup[1], [grid_setup])    
 
     connected_pipe = []
     pair_pipe = []
