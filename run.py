@@ -23,6 +23,8 @@ NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23',
 
 NEIGHBORLR = [['10','11'],['11','12'],['12','13'],['21','22'],['22','23'],['31','32'],
             ['32','33'],['33','34']]
+#all possible type of pipe
+TYPE = ['straight', 'angled', 'three_opening']
 
 PIPE_TYPE = [['W'],['E']]
 for i in range(0, len(ORIENTATIONS)):
@@ -89,14 +91,14 @@ class Connected(object):
     def _prop_name(self):
         return f"Connected({self.pipe1}, {self.pipe2})"
 @proposition(E)
-class striant(object):
-    def __init__(self, pipe) -> None:
+class Pipe_type_orien_at_Location(object):
+    def __init__(self, pipe, type):
         assert pipe in PIPE_TYPE
+        assert type in TYPE
+        self.type = type
         self.pipe = pipe
-
     def _prop_name(self):
-        return f"PipeType({self.pipe})"
-    
+        return f"[{self.type} is a {self.pipe}]"
 @proposition(E)
 class Neighbor(object):
     def __init__(self, loc1, loc2) -> None:
@@ -107,6 +109,16 @@ class Neighbor(object):
 
     def _prop_name(self):
         return f"[{self.loc1} --> {self.loc2}]"
+@proposition(E)
+class contain_pt_at_Location(object):
+    def __init__(self, c_pipetype, l) -> None:
+        assert l in LOCATIONS
+        assert c_pipetype in PIPE_TYPE
+        self.l = l
+        self.c_pipetype = c_pipetype
+
+    def _prop_name(self):
+        return f"[{self.loc2} contain{self.c_pipetype}]"
 
 
 @constraint.at_least_one(E)
@@ -184,6 +196,39 @@ def example_theory():
             return
         
          
+
+
+    '''possible orientations for each pipe'''
+    straight_pipes = []
+    angled_pipes = []
+    three_opening_pipes = []
+
+    for pipe in PIPE_TYPE:
+        if len(pipe) == 2:
+            if pipe == ['N', 'S'] or pipe == ['E', 'W']:
+                straight_pipes.append(Pipe_type_orien_at_Location(pipe,'straight'))
+            else:
+                angled_pipes.append(pipe)
+        elif len(pipe) == 3:
+            three_opening_pipes.append(pipe)
+    #
+    possible_contain = []
+    for r in routes:
+        for i in range(1,len(r)):
+            if(i == 1 & r[i] in NEIGHBORLR):
+                possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
+            elif(i == 1 & r[i] in NEIGHBORUD):
+                possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
+            else:
+                if (r[i] in NEIGHBORLR & possible_contain[i-2]):
+                    possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
+                elif(r[i] in NEIGHBORUD):
+                    possible_contain.append(contain_pt_at_Location(['N','S'],r[i][0]))
+            if()
+            
+
+
+
 
     connected_pipe = []
     pair_pipe = []
