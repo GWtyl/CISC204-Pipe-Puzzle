@@ -250,11 +250,12 @@ def example_theory():
             elif(i == 1 & r[i] in NEIGHBORUD):
                 possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
             else:
-                if (r[i] in NEIGHBORLR & possible_contain[i-2]):
+                if (r[i] in NEIGHBORLR & possible_contain[i-2].c_pipetype == ['E','W']):
                     possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
-                elif(r[i] in NEIGHBORUD):
-                    possible_contain.append(contain_pt_at_Location(['N','S'],r[i][0]))
-            if()
+                elif(r[i] in NEIGHBORUD & possible_contain[i-2].c_pipetype == ['S','W']):
+                    possible_contain.append(contain_pt_at_Location(['N', 'S'],r[i][0]))
+                elif(r[i] in NEIGHBORUD & possible_contain[i-2].c_pipetype == ['E','W']):
+                    possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
             
 
 
