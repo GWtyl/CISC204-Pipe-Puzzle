@@ -187,16 +187,46 @@ def example_theory():
 
     #all possible routes for the grid
     routes = []
-    path = []
-    all_neighbor = NEIGHBORLR + NEIGHBORUD
-
-    def find_path(i,path):
-        if "3,4" in grid_setup[i].location:
-            routes.append(path)
-            return
+    grid = [['10','11','12','13'],
+                 ['21','22','23'],
+                 ['31','32','33','34']]
+    graph =[[2,'11','21'],[1,'11','12'],[6,'21','31'],[5,'21','22'],[4,'12','22'],[3,'12','13'],
+            [10,'31','32'],[7,'22','32'],[8,'22','23'],[9,'13','23'],[11,'32','33'],[12,'23','33']]
+    #max weight is 53
+    #min weight is 25
+    total_weight = 25
+    while not total_weight == 53:
+        route = []
+        weight = 0
+        route.append(grid[0][0])
+        route.append(grid[0][1])
+        while not (route[-1] == '33'):
+            val1 = -1
+            node1 = ""
+            val2 = -1
+            node2 = ""
+            for node in graph:
+                if route[-1] in node:
+                    if val1 == -1:
+                        val1 = node[0]
+                    else:
+                        val2 = node[0]
+            if val1>val2:
+                route.append(node1)
+                weight = weight+val1
+                val1,val2 = -1, -1
+                node1,node2 = "",""
+            else:
+                route.append(node2)
+                weight = weight+val2
+                val1,val2 = -1, -1
+                node1,node2 = "",""
         
-         
-
+        route.append('34')
+        routes.append(route)
+        route = []
+        total_weight = total_weight+1
+            
 
     '''possible orientations for each pipe'''
     straight_pipes = []
