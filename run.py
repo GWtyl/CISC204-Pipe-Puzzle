@@ -1,6 +1,7 @@
 
 from bauhaus import Encoding, proposition, constraint, And, Or
 from bauhaus.utils import count_solutions, likelihood
+'''test for git M'''
 
 # These two lines make sure a faster SAT solver is used.
 from nnf import config
