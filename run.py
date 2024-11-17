@@ -309,25 +309,23 @@ def example_theory():
             elif(i == 1 and r[i] in NEIGHBORUD):
                 possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
             else:
-                if r[i] in NEIGHBORLR:
-                    if(possible_contain[i-2].c_pipetype == ['E','W']):
-                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
-                    elif(possible_contain[i-2].c_pipetype == ['N','S']):
-                        possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))
-                    elif(possible_contain[i-2].c_pipetype == ['N','E']):
-                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
-                elif(r[i] in NEIGHBORUD):
-                    if(possible_contain[-1].c_pipetype == ['S','W']):
-                        possible_contain.append(contain_pt_at_Location(['N', 'S'],r[i][0]))
-                    elif(possible_contain[i-2].c_pipetype == ['E','W']):
-                        possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
+                if '22' in r[i]:
+                    if r[i] in NEIGHBORLR:
+                        if(possible_contain[i-2].c_pipetype == ['E','W']):
+                            possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
+                        elif(possible_contain[i-2].c_pipetype == ['N','S']):
+                            possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))
+                        elif(possible_contain[i-2].c_pipetype == ['N','E']):
+                            possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
+                    elif(r[i] in NEIGHBORUD):
+                        if(possible_contain[-1].c_pipetype == ['S','W']):
+                            possible_contain.append(contain_pt_at_Location(['N', 'S'],r[i][0]))
+                        elif(possible_contain[i-2].c_pipetype == ['E','W']):
+                            possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
                     
     #[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]          
     print(possible_contain)#[[11 contain['E', 'W']], [12 contain['E', 'W']], [13 contain['S', 'W']], [23 contain['N', 'S']]]
             
-
-
-
 
     connected_pipe = []
     pair_pipe = []
