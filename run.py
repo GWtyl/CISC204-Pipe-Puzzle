@@ -277,12 +277,21 @@ def example_theory():
     
         
     #all possible routes for the grid
+    int_routes = []
     routes = []
+    routes = [str(i) for i in routes]
     grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
     src = 0
     dst = 10
     v = 11
-    find_paths(grid,src,dst,v,routes)
+    find_paths(grid,src,dst,v,int_routes)
+    #this is to convert all the values of int routes to string and put them in the routes list
+    for i in int_routes:
+        temp= []
+        for j in i:
+            temp.append(str(j))
+        routes.append(temp)
+    print(routes)
     print(routes) #this is just to check that routes contain the correct traversable paths
     
     '''possible orientations for each pipe'''
