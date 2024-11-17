@@ -265,7 +265,7 @@ def example_theory():
                 angled_pipes.append(pipe)
         elif len(pipe) == 3:
             three_opening_pipes.append(pipe)
-    #
+    #find all what a pipe need to contain at one location
     routes = [[['10','11'],['11','12'],['12','13'],['13','23'],['23','33'],['33','34']]]#test case for possible_cotain
     possible_contain = []
     for r in routes:
@@ -276,14 +276,16 @@ def example_theory():
                 possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
             else:
                 print(r[i] in NEIGHBORLR , possible_contain[i-2].c_pipetype,i)
-                if (r[i] in NEIGHBORLR and possible_contain[i-2].c_pipetype == ['E','W']):
-                    possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
+                if r[i] in NEIGHBORLR:
+                    if(possible_contain[i-2].c_pipetype == ['E','W']):
+                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
+                    elif(possible_contain[i-2].c_pipetype == ['N','S']):
+                        possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))
                 elif(r[i] in NEIGHBORUD and possible_contain[i-2].c_pipetype == ['S','W']):
                     possible_contain.append(contain_pt_at_Location(['N', 'S'],r[i][0]))
                 elif(r[i] in NEIGHBORUD and possible_contain[i-2].c_pipetype == ['E','W']):
                     possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
-                elif(r[i] in NEIGHBORUD and possible_contain[i-2].c_pipetype == ['N','S']):
-                    possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))
+    #[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]          
     print(possible_contain)#[[11 contain['E', 'W']], [12 contain['E', 'W']], [13 contain['S', 'W']], [23 contain['N', 'S']]]
             
 
@@ -377,7 +379,6 @@ def example_theory():
 
 
 if __name__ == "__main__":
-    #[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
     #print(PIPE_TYPE)
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
