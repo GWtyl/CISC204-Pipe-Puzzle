@@ -7,6 +7,10 @@ from nnf import config
 config.sat_backend = "kissat"
 #import random
 import random
+
+#import for BFS algorithm for finding all paths
+from typing import List
+from collections import deque
 # Encoding that will store all of your constraints
 E = Encoding()
 
@@ -185,48 +189,67 @@ def example_theory():
     E.add_constraint(And(*grid_setup))#imply the there are different orientation for the setup with all same pipe
     
 
+
+    #-> means the function should return nothing
+    # path: List[int] means the path variable should be a list of integers
+    def print_path(path: List[int]) -> None:
+        
+        for i in range(len(path)):
+            print(path[i], end = " ")
+        print()
+    
+    #check if a node/position is visited or not    
+    def is_not_visited(x : int, path: List[int]) -> int:
+        for i in range(len(path)):
+            if (path[i] == x):
+                return 0
+        return 1
+
+    '''
+    find all possible paths for a graph/grid
+    g: the grid/graph
+    src: the starting point
+    dst: the ending point
+    v: number of verticies
+    '''
+    def find_paths(g: List[List[str]], src: str, dst: str, v: int, routes: List[str]) -> None:
+        
+        #queue to store the paths
+        q = deque()
+        
+        #path vector to store the current vectors
+        path = []
+        path.append(src)
+        q.append(path.copy())
+        
+        while q:
+            path = q.popleft()
+            last = path[len(path) - 1]
+            
+            if(last == dst):
+                print_path(path)
+                routes.append(path)
+            
+            for i in range(len(g[last])):
+                if(is_not_visited(g[last][i],path)):
+                    new_path = path.copy()
+                    new_path.append(g[last][i])
+                    q.append(new_path)
+    
+        
     #all possible routes for the grid
     routes = []
     grid = [['10','11','12','13'],
                  ['21','22','23'],
                  ['31','32','33','34']]
+    src = "10"
+    dst = "34"
+    v = 11
+    find_paths(grid,src,dst,v,routes)
+    
+    
     graph =[[2,'11','21'],[1,'11','12'],[6,'21','31'],[5,'21','22'],[4,'12','22'],[3,'12','13'],
             [10,'31','32'],[7,'22','32'],[8,'22','23'],[9,'13','23'],[11,'32','33'],[12,'23','33']]
-    #max weight is 53
-    #min weight is 25
-    total_weight = 25
-    while not total_weight == 53:
-        route = []
-        weight = 0
-        route.append(grid[0][0])
-        route.append(grid[0][1])
-        while not (route[-1] == '33'):
-            val1 = -1
-            node1 = ""
-            val2 = -1
-            node2 = ""
-            for node in graph:
-                if route[-1] in node:
-                    if val1 == -1:
-                        val1 = node[0]
-                    else:
-                        val2 = node[0]
-            if val1>val2:
-                route.append(node1)
-                weight = weight+val1
-                val1,val2 = -1, -1
-                node1,node2 = "",""
-            else:
-                route.append(node2)
-                weight = weight+val2
-                val1,val2 = -1, -1
-                node1,node2 = "",""
-        
-        route.append('34')
-        routes.append(route)
-        route = []
-        total_weight = total_weight+1
-            
 
     '''possible orientations for each pipe'''
     straight_pipes = []
