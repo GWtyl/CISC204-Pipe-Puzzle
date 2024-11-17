@@ -206,14 +206,14 @@ def example_theory():
                 return 0
         return 1
 
-    '''
+     '''
     find all possible paths for a graph/grid
     g: the grid/graph
     src: the starting point
     dst: the ending point
     v: number of verticies
     '''
-    '''def find_paths(g: List[List[str]], src: str, dst: str, v: int, routes: List[str]) -> None:
+    def find_paths(g: List[List[int]], src: int, dst: int, v: int, routes: List[int]) -> None:
         
         #queue to store the paths
         q = deque()
@@ -230,7 +230,8 @@ def example_theory():
             if(last == dst):
                 print_path(path)
                 routes.append(path)
-            
+                
+            #print(len(g[last]))
             for i in range(len(g[last])):
                 if(is_not_visited(g[last][i],path)):
                     new_path = path.copy()
@@ -240,18 +241,12 @@ def example_theory():
         
     #all possible routes for the grid
     routes = []
-    grid = [['10','11','12','13'],
-                 ['21','22','23'],
-                 ['31','32','33','34']]
-    src = "10"
-    dst = "34"
+    grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
+    src = 0
+    dst = 10
     v = 11
     find_paths(grid,src,dst,v,routes)
     
-    
-    graph =[[2,'11','21'],[1,'11','12'],[6,'21','31'],[5,'21','22'],[4,'12','22'],[3,'12','13'],
-            [10,'31','32'],[7,'22','32'],[8,'22','23'],[9,'13','23'],[11,'32','33'],[12,'23','33']]'''
-
     '''possible orientations for each pipe'''
     straight_pipes = []
     angled_pipes = []
