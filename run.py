@@ -15,22 +15,27 @@ from collections import deque
 # Encoding that will store all of your constraints
 E = Encoding()
 
+#this is all possible orentations of a pipe
 ORIENTATIONS = list('NSEW')
 #     N
 #   +----+
 # W |    | E
 #   +----+
 #     S   
+#this is a list of all possible locations that a pipe can be at; each location can only contain one pipe
 LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
 
 #win condition: go through neighbor array and make sure every pair of neighbor is connected
+#this list is a list of all possible neighbours that are north/south of each other
 NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23','33']]
 
+#this list is a list of all possible neighbours that are east/west of each other
 NEIGHBORLR = [['10','11'],['11','12'],['12','13'],['21','22'],['22','23'],['31','32'],
             ['32','33'],['33','34']]
 #all possible type of pipe
 TYPE = ['straight', 'angled', 'three_opening']
 
+#this is the opening/ending pipe(the first and last pipe)
 PIPE_TYPE = [['W'],['E']]
 for i in range(0, len(ORIENTATIONS)):
     orien1 = ORIENTATIONS[i]
@@ -193,8 +198,8 @@ def example_theory():
 
     #-> means the function should return nothing
     # path: List[int] means the path variable should be a list of integers
+    #this function is to print the traversable path from starting pipe to ending pipe
     def print_path(path: List[int]) -> None:
-        
         for i in range(len(path)):
             print(path[i], end = " ")
         print()
@@ -206,15 +211,47 @@ def example_theory():
                 return 0
         return 1
 
-     '''
+    #this is to convert the values from 0,1,2,3...10 to location notation (10,11,12,...34)
+    #since the finding all the possible route function breaks if it's not listed ast 0,1,2,3,4...
+    #this function is necessary to convert it to proper notation
+    def convert_value(val):
+        new_val = []
+        for i in val:
+            match i:
+                case 0: 
+                    new_val.append(10)
+                case 1:
+                    new_val.append(11)
+                case 2:
+                    new_val.append(12)
+                case 3:
+                    new_val.append(13)
+                case 4:
+                    new_val.append(21)
+                case 5:
+                    new_val.append(22)
+                case 6:
+                    new_val.append(23)
+                case 7:
+                    new_val.append(31)
+                case 8:
+                    new_val.append(32)
+                case 9:
+                    new_val.append(33)
+                case 10:
+                    new_val.append(34)
+                case _:
+                    new_val.append("does not exist")
+        return new_val
+            
+    '''
     find all possible paths for a graph/grid
     g: the grid/graph
     src: the starting point
     dst: the ending point
     v: number of verticies
-    '''
+    '''    
     def find_paths(g: List[List[int]], src: int, dst: int, v: int, routes: List[int]) -> None:
-        
         #queue to store the paths
         q = deque()
         
@@ -228,10 +265,10 @@ def example_theory():
             last = path[len(path) - 1]
             
             if(last == dst):
+                new_val = convert_value(path)
                 print_path(path)
-                routes.append(path)
+                routes.append(new_val)
                 
-            #print(len(g[last]))
             for i in range(len(g[last])):
                 if(is_not_visited(g[last][i],path)):
                     new_path = path.copy()
@@ -246,6 +283,7 @@ def example_theory():
     dst = 10
     v = 11
     find_paths(grid,src,dst,v,routes)
+    print(routes) #this is just to check that routes contain the correct traversable paths
     
     '''possible orientations for each pipe'''
     straight_pipes = []
@@ -290,7 +328,9 @@ def example_theory():
     connected_pipe = []
     pair_pipe = []
     #check if how many pairs on grid is connected.if they are connected, add them to constriant
-    #loop through UD and LR
+    #loop through NeighborUD and NeighborLR
+    #this is basically checking to see if there is a pair of pipe that is connected
+    #these only check for pairs, meaning only checking if two pipes are connected, not if 3 pipes or 4 pipes etc are connected
     for i in range(0,len(grid_setup)):
         for connectLR in NEIGHBORLR:
             if connectLR[0] == grid_setup[i].location and connectLR[1] == grid_setup[i+1].location:
@@ -300,6 +340,9 @@ def example_theory():
                     connected_pipe.append(pair_pipe)
                     pair_pipe = []
                     break
+    #this is to check if there are pairs of pipes connected north/south
+    #it does the same thing as the loop above except this checks if a pair of pipes are connected north/south
+    #so if a pipe has a opening upwards and a pipe has a opening downwards then they are connected
     for i in range(0,2):
         for j in range(1,4):            
             for connectUD in NEIGHBORUD:
