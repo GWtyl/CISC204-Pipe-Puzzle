@@ -122,7 +122,7 @@ class contain_pt_at_Location(object):
         self.c_pipetype = c_pipetype
 
     def _prop_name(self):
-        return f"[{self.loc2} contain{self.c_pipetype}]"
+        return f"[{self.l} contain{self.c_pipetype}]"
 
 
 @constraint.at_least_one(E)
@@ -212,7 +212,7 @@ def example_theory():
     dst: the ending point
     v: number of verticies
     '''
-    def find_paths(g: List[List[str]], src: str, dst: str, v: int, routes: List[str]) -> None:
+    '''def find_paths(g: List[List[str]], src: str, dst: str, v: int, routes: List[str]) -> None:
         
         #queue to store the paths
         q = deque()
@@ -249,7 +249,7 @@ def example_theory():
     
     
     graph =[[2,'11','21'],[1,'11','12'],[6,'21','31'],[5,'21','22'],[4,'12','22'],[3,'12','13'],
-            [10,'31','32'],[7,'22','32'],[8,'22','23'],[9,'13','23'],[11,'32','33'],[12,'23','33']]
+            [10,'31','32'],[7,'22','32'],[8,'22','23'],[9,'13','23'],[11,'32','33'],[12,'23','33']]'''
 
     '''possible orientations for each pipe'''
     straight_pipes = []
@@ -265,20 +265,25 @@ def example_theory():
         elif len(pipe) == 3:
             three_opening_pipes.append(pipe)
     #
+    routes = [[['10','11'],['11','12'],['12','13'],['13','23'],['23','33'],['33','34']]]#test case for possible_cotain
     possible_contain = []
     for r in routes:
         for i in range(1,len(r)):
-            if(i == 1 & r[i] in NEIGHBORLR):
+            if(i == 1 and r[i] in NEIGHBORLR):
                 possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
-            elif(i == 1 & r[i] in NEIGHBORUD):
+            elif(i == 1 and r[i] in NEIGHBORUD):
                 possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
             else:
-                if (r[i] in NEIGHBORLR & possible_contain[i-2].c_pipetype == ['E','W']):
+                print(r[i] in NEIGHBORLR , possible_contain[i-2].c_pipetype,i)
+                if (r[i] in NEIGHBORLR and possible_contain[i-2].c_pipetype == ['E','W']):
                     possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
-                elif(r[i] in NEIGHBORUD & possible_contain[i-2].c_pipetype == ['S','W']):
+                elif(r[i] in NEIGHBORUD and possible_contain[i-2].c_pipetype == ['S','W']):
                     possible_contain.append(contain_pt_at_Location(['N', 'S'],r[i][0]))
-                elif(r[i] in NEIGHBORUD & possible_contain[i-2].c_pipetype == ['E','W']):
+                elif(r[i] in NEIGHBORUD and possible_contain[i-2].c_pipetype == ['E','W']):
                     possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
+                elif(r[i] in NEIGHBORUD and possible_contain[i-2].c_pipetype == ['N','S']):
+                    possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))
+    print(possible_contain)#[[11 contain['E', 'W']], [12 contain['E', 'W']], [13 contain['S', 'W']], [23 contain['N', 'S']]]
             
 
 
