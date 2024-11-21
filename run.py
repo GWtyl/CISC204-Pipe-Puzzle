@@ -277,14 +277,22 @@ def example_theory():
     
         
     #all possible routes for the grid
+    int_routes = []
     routes = []
+    routes = [str(i) for i in routes]
     grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
     src = 0
     dst = 10
     v = 11
-    find_paths(grid,src,dst,v,routes)
+    find_paths(grid,src,dst,v,int_routes)
+    #this is to convert all the values of int routes to string and put them in the routes list
+    for i in int_routes:
+        temp= []
+        for j in i:
+            temp.append(str(j))
+        routes.append(temp)
     print(routes) #this is just to check that routes contain the correct traversable paths
-    
+    #E.add_at_least_one(routes)#there should be at least one path that will be true
     '''possible orientations for each pipe'''
     straight_pipes = []
     angled_pipes = []
@@ -298,34 +306,49 @@ def example_theory():
                 angled_pipes.append(pipe)
         elif len(pipe) == 3:
             three_opening_pipes.append(pipe)
-    #find all what a pipe need to contain at one location
-    routes = [[['10','11'],['11','12'],['12','22'],['22','21'],['21','31'],['31','32'],['32','33'],['33','34']]]#test case for possible_cotain
-    possible_contain = []
-    for r in routes:
-        for i in range(1,len(r)):
-            print(possible_contain)
-            if(i == 1 and r[i] in NEIGHBORLR):
-                possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
+
+
+    '''change the route from ['10','11','21','31','32','33','34'] to ['10','11'],['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
+    for i in range(len(routes)):
+        for o in range(len(routes[i])-1):#this is to change the path from single one to a pair of location
+            routes[i][o] = [routes[i][o],routes[i][o+1]]
+    #print(routes)    
+    '''change all r in route as location to location_contain_pipe'''
+    #routes = [[['10','11'],['11','21'],['21','31'],['31','32'],['32','33'],['33','34']]]#test case contain 1 path
+    route_contain = []
+    for r in routes:#r is a path in routes
+        possible_contain = []
+        for i in range(1,len(r)):#loop through all location connection in path
+            #print(possible_contain)
+            if(i == 1 and r[i] in NEIGHBORLR):# the first grid will only habe two options, either go right(straight(LR)) or down(angled(down_left))
+                possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straight(LR) pipe
             elif(i == 1 and r[i] in NEIGHBORUD):
-                possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
+                possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))#angled(down_left) pipe
             else:
-                if '22' in r[i]:
-                    if r[i] in NEIGHBORLR:
-                        if(possible_contain[i-2].c_pipetype == ['E','W']):
-                            possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
-                        elif(possible_contain[i-2].c_pipetype == ['N','S']):
-                            possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))
-                        elif(possible_contain[i-2].c_pipetype == ['N','E']):
-                            possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))
-                    elif(r[i] in NEIGHBORUD):
-                        if(possible_contain[-1].c_pipetype == ['S','W']):
-                            possible_contain.append(contain_pt_at_Location(['N', 'S'],r[i][0]))
-                        elif(possible_contain[i-2].c_pipetype == ['E','W']):
-                            possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))
-                    
-    #[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]          
-    print(possible_contain)#[[11 contain['E', 'W']], [12 contain['E', 'W']], [13 contain['S', 'W']], [23 contain['N', 'S']]]
-            
+                if r[i] in NEIGHBORLR:#current connection is from left to right
+                    if(possible_contain[-1].c_pipetype == ['E','W']):#previous pipe is straight(LR) and 
+                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straight(LR) pipe
+                    elif(possible_contain[-1].c_pipetype == ['N','S']):#previous pipe is straight(UD) 
+                        possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))#angled(up_right) pipe
+                    elif(possible_contain[-1].c_pipetype == ['N','E']):#previous pipe is angled(top_right)
+                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straint(LR) pipe
+                    elif(possible_contain[-1].c_pipetype == ['E','W']):#previous pipe is straight(LR)
+                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straint(LR) pipe
+                    elif(possible_contain[-1].c_pipetype == ['S','W']):#previous pipe is angled(down_left)
+                        possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))#angled(up_right) pipe
+                    elif(possible_contain[-1].c_pipetype == ['S','E']):#this cannot happen since all route goes right and down
+                        possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))
+                elif(r[i] in NEIGHBORUD):#current connection is from up to down
+                    if(possible_contain[-1].c_pipetype == ['S','W']):#previous pipe is angled(down_left)
+                        possible_contain.append(contain_pt_at_Location(['N', 'S'],r[i][0]))#straight(UD) pipe
+                    elif(possible_contain[-1].c_pipetype == ['N','S']):#previous pipe is straight(UD)
+                        possible_contain.append(contain_pt_at_Location(['N','S'],r[i][0]))#straight(UD) pipe
+                    elif(possible_contain[-1].c_pipetype == ['E','W']):#previous pipe is straight(LR)
+                        possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))#angled(down_left) pipe
+                    elif(possible_contain[-1].c_pipetype == ['S','E']):#this cannot happen since all route goes right and down
+                        possible_contain.append(contain_pt_at_Location(['N','S'],r[i][0]))
+                
+        route_contain.append(possible_contain)#overwrite the location to locarion_contain_pipe            
 
     connected_pipe = []
     pair_pipe = []
