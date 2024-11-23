@@ -14,7 +14,7 @@ from collections import deque
 '''Encoding that will store all of your constraints'''
 E = Encoding()
 
-'''this is all possible orentations of a pipe'''
+'''used to generate all possible orentations of a pipe'''
 ORIENTATIONS = list('NSEW')
 
 '''a visual representation of one grid's oreientation'''
@@ -36,7 +36,7 @@ NEIGHBORLR = [['10','11'],['11','12'],['12','13'],['21','22'],['22','23'],['31',
             ['32','33'],['33','34']]
 
 '''all possible type of pipe'''
-TYPE = ['straight', 'angled', 'three_opening']
+TYPE = ['start','straight', 'angled', 'three_opening', 'end']
 
 '''all possible pipe orientation at a location'''
 PIPE_TYPE = []
@@ -59,6 +59,44 @@ for i in range(0, len(ORIENTATIONS)):#3 opening pipe
             p=[orien1, orien2, orien3]
             PIPE_TYPE.append(p)
 
+'''possible pipe orientation for STRAIGHT piece'''
+STRAIGHT_PIPE = ["NS", "EW"]
+'''possible pipe orientation for ANGLED piece'''
+ANGLED_PIPE = ["NW", "NE", "ES", "WS"]
+'''possible pipe orientation for THREE_OPENING piece'''
+THREE_OPENING_PIPE = ["NWS", "WNE", "NES", "WSE"]
+
+'''the type of pipe(straight, angled, three_opening) can opens to these orientations'''
+@proposition(E)
+class Straight_Pipe(object): 
+    def __init__(self, type, pipe_specific) -> None:
+        assert type in TYPE
+        assert pipe_specific in STRAIGHT_PIPE
+        self.type = type
+        self.pipe_specific = pipe_specific
+    def _prop_name(self):
+        return f"({self.type} opens {self.pipe_specific})"
+@proposition(E)
+class Angled_Pipe(object): 
+    def __init__(self, type, pipe_specific) -> None:
+        assert type in TYPE
+        assert pipe_specific in ANGLED_PIPE
+        self.type = type
+        self.pipe_specific = pipe_specific
+    def _prop_name(self):
+        return f"({self.type} opens {self.pipe_specific})"
+
+@proposition(E)
+class Three_Opening_Pipe(object): 
+    def __init__(self, type, pipe_specific) -> None:
+        assert type in TYPE
+        assert pipe_specific in THREE_OPENING_PIPE
+        self.type = type
+        self.pipe_specific = pipe_specific
+    def _prop_name(self):
+        return f"({self.type} opens {self.pipe_specific})"
+
+
 '''given pipe is at given location; this works for the setup'''
 @proposition(E)
 class Location(object): 
@@ -78,6 +116,8 @@ class TwoPipeConnection(object):
         assert pipe2 in PIPE_TYPE
         assert location1 in LOCATIONS
         assert location2 in LOCATIONS
+        #check if this is a valid connection
+        #assert [location1,location2] in NEIGHBORUD or [location1,location2] in NEIGHBORLR, f"Invalid connection: {location1} and {location2}"
         self.pipe1 = pipe1
         self.pipe2 = pipe2
         self.location1 = location1
@@ -126,6 +166,7 @@ class Neighbor(object):
     def __init__(self, loc1, loc2) -> None:
         assert loc1 in LOCATIONS
         assert loc2 in LOCATIONS
+        #assert [loc1,loc2] in NEIGHBORUD or [loc1,loc2] in NEIGHBORLR, f"Invalid connection: {loc1} and {loc2}"
         self.loc1 = loc1
         self.loc2 = loc2
 
@@ -158,7 +199,7 @@ class FancyPropositions:
 a = Location(['E'],'10')# there must have a start piece at 10
 b = Location(['W'],'34')# there must have a end piece at 34
 c = TwoPipeConnection(['E'], ['W'], '10', '11')#start and end piece ['E'] and ['W'] will not be connected directly
-d = FancyPropositions("d")
+d = Neighbor('10', '34')
 e = FancyPropositions("e")
 
 # At least one of these will be true
@@ -200,8 +241,19 @@ def example_theory():
     p=location_propositions[random.randint(81, 90)]
     grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
-    E.add_constraint(And(*grid_setup))#imply the there are different orientation for the setup with all same pipe
+    #E.add_constraint(And(*grid_setup))#imply the there are different orientation for the setup with all same pipe
+    #TODO: constraint only the type of pipe not the direction
     print(grid_setup)
+    '''nested loop go though LOCATION and check if they are in the NEIGHBORUD or NEIGHBORLR
+    if they are, then they are neighbor and add them to the constraint
+    if they are not, then they are not neighbor and can't be connected'''
+    
+    for loc1 in LOCATIONS:
+        for loc2 in LOCATIONS:
+            if [loc1, loc2] not in NEIGHBORUD and  [loc1, loc2] not in NEIGHBORLR:
+                E.add_constraint(~Neighbor(loc1, loc2))
+            elif [loc1, loc2] in NEIGHBORUD or [loc1, loc2] in NEIGHBORLR:
+                E.add_constraint(Neighbor(loc1, loc2))
 
     '''TODO: check if the print is nessaary'''
     #-> means the function should return nothing
@@ -477,10 +529,10 @@ if __name__ == "__main__":
     
     print("\nSatisfiable: %s" % T.satisfiable())
     print("# Solutions: %d" % count_solutions(T))
-    print("   Solution: %s" % T.solve())
+    #print("   Solution: %s" % T.solve())
     
     print("\nVariable likelihoods:")
-    for v,vn in zip([a,b,c,x,y,z], 'abcxyz'):
+    for v,vn in zip([a,b,c,d,y,z], 'abcdyz'):
         # Ensure that you only send these functions NNF formulas
         # Literals are compiled to NNF here
         print(" %s: %.2f" % (vn, likelihood(T, v)))
