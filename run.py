@@ -60,11 +60,12 @@ for i in range(0, len(ORIENTATIONS)):#3 opening pipe
             PIPE_TYPE.append(p)
 
 '''possible pipe orientation for STRAIGHT piece'''
-STRAIGHT_PIPE = ["NS", "EW"]
+STRAIGHT_PIPE = [['N', 'S'], ['E', 'W']]
 '''possible pipe orientation for ANGLED piece'''
-ANGLED_PIPE = ["NW", "NE", "ES", "WS"]
+ANGLED_PIPE = [['N', 'W'], ['N', 'E'], ['S', 'E'], ['S', 'W']]
 '''possible pipe orientation for THREE_OPENING piece'''
-THREE_OPENING_PIPE = ["NWS", "WNE", "NES", "WSE"]
+THREE_OPENING_PIPE = [['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
+# #this print[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
 
 '''the type of pipe(straight, angled, three_opening) can opens to these orientations'''
 @proposition(E)
@@ -184,6 +185,15 @@ class contain_pt_at_Location(object):
 
     def _prop_name(self):
         return f"[{self.l} contain{self.c_pipetype}]"
+
+'''solution for the grid'''
+@proposition(E)
+class Is_solution(object):
+    def __init__(self, setup) -> None:
+        self.setup = setup
+
+    def _prop_name(self):
+        return f"[{self.setup} have solution]"
 
 '''prevent the code below from bugging'''
 @constraint.at_least_one(E)
@@ -390,19 +400,7 @@ def example_theory():
         routes.append(temp)
     #print(routes) #this is just to check that routes contain the correct traversable paths
     #E.add_at_least_one(routes)#there should be at least one path that will be true
-    '''possible orientations for each pipe'''
-    straight_pipes = []
-    angled_pipes = []
-    three_opening_pipes = []
 
-    for pipe in PIPE_TYPE:
-        if len(pipe) == 2:
-            if pipe == ['N', 'S'] or pipe == ['E', 'W']:
-                straight_pipes.append(Pipe_type_orien_at_Location(pipe,'straight'))
-            else:
-                angled_pipes.append(pipe)
-        elif len(pipe) == 3:
-            three_opening_pipes.append(pipe)
 
 
     '''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'],['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
@@ -410,13 +408,14 @@ def example_theory():
         for o in range(len(routes[i])-1):#this is to change the path from single one to a pair of location
             routes[i][o] = [routes[i][o],routes[i][o+1]]
     #print(routes)  
-  
+    '''check if the grid setup have a solution, if it does, the solution will be one of the routes'''
+    E.add_constraint((Is_solution(grid_setup)==True)>>Or(*routes))
     '''change all r in route from location to location_contain_pipe'''
     #routes = [[['10','11'],['11','21'],['21','31'],['31','32'],['32','33'],['33','34']]]#test case contain 1 path
     route_contain = []
     for r in routes:#r is a path in routes
         possible_contain = []
-        for i in range(1,len(r)):#loop through all location connection in path
+        for i in range(1,len(r)-1):#loop through all location connection in path
             #print(possible_contain)
             if(i == 1 and r[i] in NEIGHBORLR):# the first grid will only habe two options, either go right(straight(LR)) or down(angled(down_left))
                 possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straight(LR) pipe
@@ -447,7 +446,7 @@ def example_theory():
                         possible_contain.append(contain_pt_at_Location(['N','S'],r[i][0]))
                 
         route_contain.append(possible_contain)#overwrite the location to locarion_contain_pipe    
-
+    #print(route_contain)
     #TODO: decide wheather this code will help the goal we currently have        
     '''check if how many pairs on grid is connected.if they are connected, add them to constriant
     loop through NeighborUD and NeighborLR
@@ -525,8 +524,53 @@ def example_theory():
     constraint.add_exactly_one(E, all_possible_neighbor)
     print(all_possible_neighbor)'''
 
-    #TODO: give out a solution based on the grid_setup routes contain location_contain_pipe
-
+    '''give out a solution based on the grid_setup routes contain location_contain_pipe'''
+    #TODO: no self connection or loop
+    solutions=[]
+    remove = []#index of the array that need to be removed
+    for j in range(len(route_contain)-1):# one route 11 to 33
+        for k in range(len(route_contain[j])):#[11 contains ['E','W']]
+            index = 0
+            for index in range(1,len(grid_setup)-1): 
+                if grid_setup[index].location == route_contain[j][k].l:
+                    i=index
+                    break  
+            if grid_setup[i].pipe == route_contain[j][k].c_pipetype:
+                break
+            if grid_setup[i].pipe in STRAIGHT_PIPE:
+                other_form_fits=False
+                for s in STRAIGHT_PIPE:
+                    if s == route_contain[j][k].c_pipetype or route_contain[j][k].c_pipetype in s:
+                        other_form_fits=True
+                        break          
+                if other_form_fits==False:#no other form fits
+                    remove.append(j) 
+            elif grid_setup[i].pipe in THREE_OPENING_PIPE:
+                other_form_fits = False
+                for t in THREE_OPENING_PIPE or route_contain[j][k].c_pipetype in t:
+                    if t == route_contain[j][k].c_pipetype:
+                        other_form_fits = True
+                        break
+                if not other_form_fits:
+                    remove.append(j)                     
+            elif grid_setup[i].pipe in ANGLED_PIPE:
+                other_form_fits = False
+                for a in ANGLED_PIPE:
+                    if a == route_contain[j][k].c_pipetype or route_contain[j][k].c_pipetype in a:
+                        other_form_fits = True
+                        break
+                if not other_form_fits:
+                    remove.append(j)
+         
+    route_contain = [item for idx, item in enumerate(route_contain) if idx not in remove]
+    solutions = route_contain
+    #print(f"this is the number of solutions as well as no solution:\n{len(solutions),remove}")
+    #print(f"this is all of the solutions:\n {solutions}")
+    '''check if the grid setup have a solution, if it does, any of solutions will be the solution to the setup'''
+    E.add_constraint((Is_solution(grid_setup)==True)>>Or(*solutions))
+    
+    '''for i in routes:
+        print(i)'''
     '''start and end piece ['E'] and ['W'] can not be connected directly'''
     E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '11'))
 
