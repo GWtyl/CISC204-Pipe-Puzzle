@@ -228,10 +228,9 @@ for l in LOCATIONS:
         for i in range(2,len(PIPE_TYPE)):
             p=PIPE_TYPE[random.randint(2, len(PIPE_TYPE)-1)]
             location_propositions.append(Location(p, l))
-        
-def example_theory():
+grid_setup  = []
+def setup():
     '''select one setup from location_propositions; also made sure we have exactly one pipe on each location'''
-        grid_setup  = []
     grid_setup.append(location_propositions[0])
     grid_setup.append(location_propositions[random.randint(1, 10)])
     p=location_propositions[random.randint(11, 20)]
@@ -265,121 +264,114 @@ def example_theory():
     p=location_propositions[random.randint(151, 160)]
     grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
-    E.add_constraint(And(*grid_setup))#imply the there are different orientation for the setup with all same pipe
-    
-    #print(grid_setup)
-    print(f"this is the grid setup: \n{grid_setup}")
-    #E.add_constraint(And(*grid_setup))#imply the there are different orientation for the setup with all same pipe
-    #TODO: constraint only the type of pipe not the direction
+    #TODO: only same pipe and different orientation will be allowed(constraint)
+    for g in grid_setup:
+        if g.pipe in STRAIGHT_PIPE:
+            '''constraint to make sure the pipe can be 2 opening straint pipe with different orientation at the same location'''
+            E.add_constraint(Location(['N','S'], g.location)|Location(['E','W'], g.location))
+        elif g.pipe in ANGLED_PIPE:
+            '''constraint to make sure the pipe can be 2 opening angled pipe with different orientation at the same location'''
+            E.add_constraint(Location(['N','W'], g.location)|Location(['N','E'], g.location)|Location(['S','E'], g.location)|Location(['S','W'], g.location))
+        elif g.pipe in THREE_OPENING_PIPE:
+            '''constraint to make sure the pipe can be 3 opening pipe with different orientation at the same location'''
+            E.add_constraint(Location(['N','S','E'], g.location)|Location(['N','S','W'], g.location)|Location(['N','E','W'], g.location)|Location(['S','E','W'], g.location))
+#print(f"this is the grid setup: \n{grid_setup}")
+#-> means the function should return nothing
+# path: List[int] means the path variable should be a list of integers
+#this function is to print the traversable path from starting pipe to ending pipe
+def print_path(path: List[int]) -> None:
+    for i in range(len(path)):
+        print(path[i], end = " ")
+    print()
 
-    '''nested loop go though LOCATION and check if they are in the NEIGHBORUD or NEIGHBORLR
-    if they are, then they are neighbor and add them to the constraint
-    if they are not, then they are not neighbor and can't be connected'''
-    
-    for loc1 in LOCATIONS:
-        for loc2 in LOCATIONS:
-            if [loc1, loc2] not in NEIGHBORUD and  [loc1, loc2] not in NEIGHBORLR:
-                E.add_constraint(~Neighbor(loc1, loc2))
-            elif [loc1, loc2] in NEIGHBORUD or [loc1, loc2] in NEIGHBORLR:
-                E.add_constraint(Neighbor(loc1, loc2))
+#check if a node/position is visited or not    
+def is_not_visited(x : int, path: List[int]) -> int:
+    for i in range(len(path)):
+        if (path[i] == x):
+            return 0
+    return 1
 
-    '''TODO: check if the print is nessaary'''
-    #-> means the function should return nothing
-    # path: List[int] means the path variable should be a list of integers
-    #this function is to print the traversable path from starting pipe to ending pipe
-    def print_path(path: List[int]) -> None:
-        for i in range(len(path)):
-            print(path[i], end = " ")
-        print()
+#this is to convert the values from 0,1,2,3...10 to location notation (10,11,12,...34)
+#since the finding all the possible route function breaks if it's not listed ast 0,1,2,3,4...
+#this function is necessary to convert it to proper notation
+def convert_value(val):
+    new_val = []
+    for i in val:
+        match i:
+            case 0: 
+                new_val.append(10)
+            case 1:
+                new_val.append(11)
+            case 2:
+                new_val.append(12)
+            case 3:
+                new_val.append(13)
+            case 4:
+                new_val.append(14)
+            case 5:
+                new_val.append(21)
+            case 6:
+                new_val.append(22)
+            case 7:
+                new_val.append(23)
+            case 8:
+                new_val.append(24)
+            case 9:
+                new_val.append(31)
+            case 10:
+                new_val.append(32)
+            case 11:
+                new_val.append(33)
+            case 12:
+                new_val.append(34)
+            case 13:
+                new_val.append(41)
+            case 14:
+                new_val.append(42)
+            case 15:
+                new_val.append(43)
+            case 16:
+                new_val.append(44)
+            case 17:
+                new_val.append(45)
+            case _:
+                new_val.append("does not exist")
+    return new_val
+'''
+find all possible paths for a graph/grid
+g: the grid/graph
+src: the starting point
+dst: the ending point
+v: number of verticies
+'''    
+routes = []
+def find_paths(g: List[List[int]], src: int, dst: int, v: int, routes: List[int]) -> None:
+    #queue to store the paths
+    q = deque()
     
-    #check if a node/position is visited or not    
-    def is_not_visited(x : int, path: List[int]) -> int:
-        for i in range(len(path)):
-            if (path[i] == x):
-                return 0
-        return 1
-
-    #this is to convert the values from 0,1,2,3...10 to location notation (10,11,12,...34)
-    #since the finding all the possible route function breaks if it's not listed ast 0,1,2,3,4...
-    #this function is necessary to convert it to proper notation
-    def convert_value(val):
-        new_val = []
-        for i in val:
-            match i:
-                case 0: 
-                    new_val.append(10)
-                case 1:
-                    new_val.append(11)
-                case 2:
-                    new_val.append(12)
-                case 3:
-                    new_val.append(13)
-                case 4:
-                    new_val.append(14)
-                case 5:
-                    new_val.append(21)
-                case 6:
-                    new_val.append(22)
-                case 7:
-                    new_val.append(23)
-                case 8:
-                    new_val.append(24)
-                case 9:
-                    new_val.append(31)
-                case 10:
-                    new_val.append(32)
-                case 11:
-                    new_val.append(33)
-                case 12:
-                    new_val.append(34)
-                case 13:
-                    new_val.append(41)
-                case 14:
-                    new_val.append(42)
-                case 15:
-                    new_val.append(43)
-                case 16:
-                    new_val.append(44)
-                case 17:
-                    new_val.append(45)
-                case _:
-                    new_val.append("does not exist")
-        return new_val
-    '''
-    find all possible paths for a graph/grid
-    g: the grid/graph
-    src: the starting point
-    dst: the ending point
-    v: number of verticies
-    '''    
-    def find_paths(g: List[List[int]], src: int, dst: int, v: int, routes: List[int]) -> None:
-        #queue to store the paths
-        q = deque()
+    #path vector to store the current vectors
+    path = []
+    path.append(src)
+    q.append(path.copy())
+    
+    while q:
+        path = q.popleft()
+        last = path[len(path) - 1]
         
-        #path vector to store the current vectors
-        path = []
-        path.append(src)
-        q.append(path.copy())
-        
-        while q:
-            path = q.popleft()
-            last = path[len(path) - 1]
+        if(last == dst):
+            new_val = convert_value(path)
+            #print_path(path)
+            routes.append(new_val)
             
-            if(last == dst):
-                new_val = convert_value(path)
-                #print_path(path)
-                routes.append(new_val)
-                
-            for i in range(len(g[last])):
-                if(is_not_visited(g[last][i],path)):
-                    new_path = path.copy()
-                    new_path.append(g[last][i])
-                    q.append(new_path)
+        for i in range(len(g[last])):
+            if(is_not_visited(g[last][i],path)):
+                new_path = path.copy()
+                new_path.append(g[last][i])
+                q.append(new_path)
     
         
     #all possible routes for the grid
     int_routes = []
-    routes = []
     routes = [str(i) for i in routes]
     grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
     grid_4x4 = [[1],[2,5],[1,3,6],[2,4,7],[3,8],[1,6,9],[5,2,8,10],[6,3,8,11],[7,4,12],[5,10,13],
@@ -398,21 +390,61 @@ def example_theory():
         for j in i:
             temp.append(str(j))
         routes.append(temp)
-    #print(routes) #this is just to check that routes contain the correct traversable paths
-    #E.add_at_least_one(routes)#there should be at least one path that will be true
+'''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'] and ['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
+#TODO: constraint to make sure the path is valid; use proposition location connecvted to location CL(l1,l2)(constraint)
+for i in range(len(routes)):
+    for o in range(len(routes[i])-1):#this is to change the path from single one to a pair of location
+        routes[i][o] = [routes[i][o],routes[i][o+1]]
 
 
+'''
+The goal for this week is to at least have the SAT solver working so that at least it can print something.
+Ideally, we would like the solver to print in the following format:
 
-    '''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'],['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
-    for i in range(len(routes)):
-        for o in range(len(routes[i])-1):#this is to change the path from single one to a pair of location
-            routes[i][o] = [routes[i][o],routes[i][o+1]]
-    #print(routes)  
+'''
+
+"""
+IMPORTANT:
+If there is a pipe in the original configuration and the correct path requires the pipe to be in a different orientation, 
+
+"""
+def example_theory():
+    '''start and end piece ['E'] and ['W'] can not be connected directly'''
+    E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '11'))
+
+    '''start and end piece ['E'] and ['W'] need to be at 10 and 34'''
+    E.add_constraint(Location(['E'],'10'))
+    E.add_constraint(Location(['W'],'34'))
+
+    '''some pieces beside each other can only be connected in one way'''
+    #straight(UD) pipe beside end piece can only be straight(LR) pipe
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S'],'33')))>>(Location(['E', 'W'],'33')))
+    #straight(UD) pipe beside start piece can only be straight(LR) pipe
+    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[0].pipe, '10', '11') & (Location(['N', 'S'], '11'))) >> (Location(['E', 'W'], '11')))
+    #corner 33 34 #angled pipe beside end piece can only be angled(down_left) pipe
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['S','E'],'33'))))>>(Location(['N', 'E'],'33')))
+    #corner 10 11 #angled pipe beside start piece can only be angled(down_right) pipe
+    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[len(grid_setup)-1].pipe, '10', '11') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['N','E'],'33'))))>>(Location(['S', 'W'],'33')))
+    
+    #TODO: rewrite this 3-opening can not be -| shape beside end piece or |-beside start piece 
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S','W'],'33')))>>((Location(['N', 'E', 'W'],'33'))|(Location(['N', 'S', 'E'],'33'))|(Location(['S', 'E', 'W'],'33'))))
+
+    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '10', '11')&(Location(['N', 'S','E'],'33')))>>((Location(['N', 'E', 'W'],'33'))|(Location(['N', 'S', 'W'],'33'))|(Location(['S', 'E', 'W'],'33'))))
+    
+    '''nested loop go though LOCATION and check if they are in the NEIGHBORUD or NEIGHBORLR
+    if they are, then they are neighbor and add them to the constraint
+    if they are not, then they are not neighbor and can't be connected'''
+    for loc1 in LOCATIONS:
+        for loc2 in LOCATIONS:
+            if [loc1, loc2] not in NEIGHBORUD and  [loc1, loc2] not in NEIGHBORLR:
+                E.add_constraint(~Neighbor(loc1, loc2))
+            elif [loc1, loc2] in NEIGHBORUD or [loc1, loc2] in NEIGHBORLR:
+                E.add_constraint(Neighbor(loc1, loc2))
     '''check if the grid setup have a solution, if it does, the solution will be one of the routes'''
-    E.add_constraint((Is_solution(grid_setup)==True)>>Or(*routes))
+    #E.add_constraint((Is_solution(grid_setup))>>Or(*routes))
     '''change all r in route from location to location_contain_pipe'''
     #routes = [[['10','11'],['11','21'],['21','31'],['31','32'],['32','33'],['33','34']]]#test case contain 1 path
-    route_contain = []
+    '''route_contain = []
     for r in routes:#r is a path in routes
         possible_contain = []
         for i in range(1,len(r)-1):#loop through all location connection in path
@@ -445,14 +477,13 @@ def example_theory():
                     elif(possible_contain[-1].c_pipetype == ['S','E']):#this cannot happen since all route goes right and down
                         possible_contain.append(contain_pt_at_Location(['N','S'],r[i][0]))
                 
-        route_contain.append(possible_contain)#overwrite the location to locarion_contain_pipe    
-    #print(route_contain)
+        route_contain.append(possible_contain)#overwrite the location to locarion_contain_pipe  '''  
     #TODO: decide wheather this code will help the goal we currently have        
     '''check if how many pairs on grid is connected.if they are connected, add them to constriant
     loop through NeighborUD and NeighborLR
     this is basically checking to see if there is a pair of pipe that is connected
     these only check for pairs, meaning only checking if two pipes are connected, not if 3 pipes or 4 pipes etc are connected'''
-    connected_pipe = []
+    '''connected_pipe = []
     pair_pipe = []
     for i in range(0,len(grid_setup)):
         for connectLR in NEIGHBORLR:
@@ -462,13 +493,13 @@ def example_theory():
                     pair_pipe.append(grid_setup[i+1])
                     connected_pipe.append(pair_pipe)
                     pair_pipe = []
-                    break
+                    break'''
 
     #TODO: decide wheather this code will help the goal we currently have; we now check connection based on the routes
     '''this is to check if there are pairs of pipes connected north/south
     it does the same thing as the loop above except this checks if a pair of pipes are connected north/south
     so if a pipe has a opening upwards and a pipe has a opening downwards then they are connected'''
-    for i in range(0,2):
+    '''for i in range(0,2):
         for j in range(1,4):            
             for connectUD in NEIGHBORUD:
                 if connectUD[0] == grid_setup[j+ 3*i].location and connectUD[1] == grid_setup[j+3*(i+1)].location:
@@ -477,11 +508,9 @@ def example_theory():
                         pair_pipe.append(grid_setup[j+3*(i+1)])
                         connected_pipe.append(pair_pipe)
                         pair_pipe = []
-                        break
-
-    E.add_constraint(And(*connected_pipe))
+                        break'''
     
-    #TODO: decide wheather this code will help the goal we currently have
+    #TODO: Connected(p1,p2) if p1 and p2 are connected(constraint)
     '''all possible connection like [E,[E,W]] start pipe at 10 can connect to straight pipe'''
     possible_connectionsud = []
     for i in PIPE_TYPE:
@@ -494,7 +523,7 @@ def example_theory():
                             possible_connectionsud.append(c)    
             else:
                 break  
-    constraint.add_exactly_one(E, possible_connectionsud)
+    #constraint.add_exactly_one(E, possible_connectionsud)
     possible_connectionslr = []
     for i in PIPE_TYPE:
         for j in i:
@@ -505,7 +534,7 @@ def example_theory():
                             c=[i,k]
                             possible_connectionslr.append(c)
     possible_connectionslr.remove([['E'], ['W']])
-    constraint.add_exactly_one(E, possible_connectionslr)
+    #constraint.add_exactly_one(E, possible_connectionslr)
 
     
     '''for one location, there are at least one and at most 4 neighbor'''
@@ -524,80 +553,13 @@ def example_theory():
     constraint.add_exactly_one(E, all_possible_neighbor)
     print(all_possible_neighbor)'''
 
-    '''give out a solution based on the grid_setup routes contain location_contain_pipe'''
-    #TODO: no self connection or loop
-    solutions=[]
-    remove = []#index of the array that need to be removed
-    for j in range(len(route_contain)-1):# one route 11 to 33
-        for k in range(len(route_contain[j])):#[11 contains ['E','W']]
-            index = 0
-            for index in range(1,len(grid_setup)-1): 
-                if grid_setup[index].location == route_contain[j][k].l:
-                    i=index
-                    break  
-            if grid_setup[i].pipe == route_contain[j][k].c_pipetype:
-                break
-            if grid_setup[i].pipe in STRAIGHT_PIPE:
-                other_form_fits=False
-                for s in STRAIGHT_PIPE:
-                    if s == route_contain[j][k].c_pipetype or route_contain[j][k].c_pipetype in s:
-                        other_form_fits=True
-                        break          
-                if other_form_fits==False:#no other form fits
-                    remove.append(j) 
-            elif grid_setup[i].pipe in THREE_OPENING_PIPE:
-                other_form_fits = False
-                for t in THREE_OPENING_PIPE or route_contain[j][k].c_pipetype in t:
-                    if t == route_contain[j][k].c_pipetype:
-                        other_form_fits = True
-                        break
-                if not other_form_fits:
-                    remove.append(j)                     
-            elif grid_setup[i].pipe in ANGLED_PIPE:
-                other_form_fits = False
-                for a in ANGLED_PIPE:
-                    if a == route_contain[j][k].c_pipetype or route_contain[j][k].c_pipetype in a:
-                        other_form_fits = True
-                        break
-                if not other_form_fits:
-                    remove.append(j)
-         
-    route_contain = [item for idx, item in enumerate(route_contain) if idx not in remove]
-    solutions = route_contain
-    #print(f"this is the number of solutions as well as no solution:\n{len(solutions),remove}")
-    #print(f"this is all of the solutions:\n {solutions}")
-    '''check if the grid setup have a solution, if it does, any of solutions will be the solution to the setup'''
-    E.add_constraint((Is_solution(grid_setup)==True)>>Or(*solutions))
-    
-    '''for i in routes:
-        print(i)'''
-    '''start and end piece ['E'] and ['W'] can not be connected directly'''
-    E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '11'))
 
-    '''start and end piece ['E'] and ['W'] need to be at 10 and 34'''
-    E.add_constraint(Location(['E'],'10'))
-    E.add_constraint(Location(['W'],'34'))
-
-    '''some pieces beside each other can only be connected in one way'''
-    #straight(UD) pipe beside end piece can only be straight(LR) pipe
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S'],'33')))>>(Location(['E', 'W'],'33')))
-    #straight(UD) pipe beside start piece can only be straight(LR) pipe
-    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[0].pipe, '10', '11') & (Location(['N', 'S'], '11'))) >> (Location(['E', 'W'], '11')))
-    #corner 33 34 #angled pipe beside end piece can only be angled(down_left) pipe
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['S','E'],'33'))))>>(Location(['N', 'E'],'33')))
-    #corner 10 11 #angled pipe beside start piece can only be angled(down_right) pipe
-    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[len(grid_setup)-1].pipe, '10', '11') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['N','E'],'33'))))>>(Location(['S', 'W'],'33')))
-    
-    #TODO: rewrite this 3-opening can not be -| shape beside end piece or |-beside start piece 
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S','W'],'33')))>>((Location(['N', 'E', 'W'],'33'))|(Location(['N', 'S', 'E'],'33'))|(Location(['S', 'E', 'W'],'33'))))
-
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '10', '11')&(Location(['N', 'S','E'],'33')))>>((Location(['N', 'E', 'W'],'33'))|(Location(['N', 'S', 'W'],'33'))|(Location(['S', 'E', 'W'],'33'))))
     
     return E
 
 
 if __name__ == "__main__":
-    #print(PIPE_TYPE)
+    setup()
     # #this print[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
@@ -608,9 +570,9 @@ if __name__ == "__main__":
     # After compilation (and only after), you can check some of the properties
     # of your model:
     
-    print("\nSatisfiable: %s" % T.satisfiable())
-    print("# Solutions: %d" % count_solutions(T))
-    #print("   Solution: %s" % T.solve())
+    print("\nSatisfiable: %s" % T.satisfiable())#True
+    print("# Solutions: %d" % count_solutions(T))#number of solutions
+    print("   Solution: %s" % T.solve())#solution
     
     print("\nVariable likelihoods:")
     for v,vn in zip([a,b,c,d,y,z], 'abcdyz'):
