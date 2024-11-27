@@ -255,8 +255,21 @@ def setup():
     p=location_propositions[random.randint(81, 90)]
     grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
-    
-#print(f"this is the grid setup: \n{grid_setup}")
+grid_setup = [
+    Location(['E'], '10'),
+    Location(['N', 'W'], '11'),
+    Location(['S', 'E'], '12'),
+    Location(['N', 'E'], '13'),
+    Location(['E', 'W'], '21'),
+    Location(['S', 'E'], '22'),
+    Location(['N', 'E', 'W'], '23'),
+    Location(['N', 'S', 'E'], '31'),
+    Location(['N', 'S', 'E'], '32'),
+    Location(['N', 'S', 'E'], '33'),
+    Location(['W'], '34')
+]
+#just pick one setup from for now
+
 #-> means the function should return nothing
 # path: List[int] means the path variable should be a list of integers
 #this function is to print the traversable path from starting pipe to ending pipe
@@ -396,7 +409,7 @@ def example_theory():
             if g.location == '11':
                 E.add_constraint((Location(['S','W'], g.location))&(TwoPipeConnection(['E'], ['S','W'], '10', g.location)))
             elif g.location == '12':
-                E.add_constraint((Location(['S','E'], g.location))|Location(['W','S'], g.location))
+                E.add_constraint((Location(['S','E'], g.location))|Location(['S','W'], g.location))
             elif g.location == '21':
                 E.add_constraint(((Location(['S','E'], g.location))|Location(['N','E'], g.location)))
             elif g.location == '23':
@@ -416,13 +429,13 @@ def example_theory():
             #(UD) for location 21 and 23 #if it is in the solution routes, it will be like this limit 
             # TODO: and connected to 11 if pipe on it have 'E' opeing and connected 13 only if they have opening 'W'
             elif g.location == '12':
-                E.add_constraint((Location(['E','W'], g.location)) & (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
+                E.add_constraint((Location(['E','W'], g.location))) #& (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '21':
-                E.add_constraint((Location(['N','S'], g.location)) & (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
+                E.add_constraint((Location(['N','S'], g.location))) #& (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '23':
-                E.add_constraint((Location(['N','S'], g.location)) & (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
+                E.add_constraint((Location(['N','S'], g.location))) #& (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '32':
-                E.add_constraint((Location(['E','W'], g.location)) & (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
+                E.add_constraint((Location(['E','W'], g.location)) )#& (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '13':#if it is at 13, it can not connect to 12 or 23
                 E.add_constraint((Location(g.pipe, g.location))&(~TwoPipeConnection(grid_setup[2].pipe, g.pipe, grid_setup[2].location, g.location)&(~TwoPipeConnection(g.pipe, grid_setup[6].pipe, g.location, grid_setup[6].location))))
             elif g.location == '31':#if it is at 31, it stay same oreietation but no connction to the pipe at location 32 or 21
@@ -434,19 +447,9 @@ def example_theory():
                 E.add_constraint(Location(['N','S'], g.location)|Location(['E','W'], g.location))
         
     '''start and end piece ['E'] and ['W'] can not be connected directly'''
-    E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '11'))
-
-    #this is to check whether or not two pipes are connected
-    #note that one pipe can be connected to multiple pipes
-    for i in range(1,len(grid_setup)):
-        counter = 0
-        for j in range(i+1,len(grid_setup)):
-            if counter>4:
-                counter = 0
-                break
-            if ('E' in grid_setup[i].pipe and 'W' in grid_setup[j].pipe) or ('S' in grid_setup[i].pipe and 'N' in grid_setup[j].pipe):
-                E.add_constraint(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location))
-            counter = counter+1
+    E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '34'))
+    
+    
             
     #corner 33 34 #angled pipe beside end piece can only be angled(down_left) pipe
     #E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['S','E'],'33'))))>>(Location(['N', 'E'],'33')))
@@ -465,6 +468,18 @@ def example_theory():
                 E.add_constraint(~Neighbor(loc1, loc2))
             elif [loc1, loc2] in NEIGHBORUD or [loc1, loc2] in NEIGHBORLR:
                 E.add_constraint(Neighbor(loc1, loc2))
+    
+    #this is to check whether or not two pipes are connected
+    #note that one pipe can be connected to multiple pipes
+    for i in range(1,len(grid_setup)):
+        counter = 0
+        for j in range(i+1,len(grid_setup)):
+            if counter>4:
+                counter = 0
+                break
+            if ('E' in grid_setup[i].pipe and 'W' in grid_setup[j].pipe) or ('S' in grid_setup[i].pipe and 'N' in grid_setup[j].pipe):
+                E.add_constraint((Neighbor(grid_setup[i].location,grid_setup[j].location)|Neighbor(grid_setup[j].location,grid_setup[i].location))>>(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location)))
+            counter = counter+1
     '''check if the grid setup have a solution, if it does, the solution will be one of the routes'''
     #E.add_constraint((Is_solution(grid_setup))>>Or(*routes))
     '''change all r in route from location to location_contain_pipe'''
@@ -582,22 +597,24 @@ def example_theory():
     
     return E
 
-def display_solution(S, only_tile_placement=False):
+def display_solution(S, want=False):
     true_props = set()
     for k in S:
-        if S[k] and (not only_tile_placement or '@' in str(k)):
+        if S[k] and (not want or '@' in str(k)):
             true_props.add(str(k))
             # print(k)
     print("\n".join(sorted(true_props)))
 if __name__ == "__main__":
-    setup()
+    #setup()
+    #print(f"this is the grid setup: \n{grid_setup}")
+
     # #this print[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
     T = T.compile()
     S = T.solve()
     if S:
-        display_solution(S, only_tile_placement=True)
+        display_solution(S, True)
         tile_placement = [p for p in S if '@' in str(p)]
     else:
         print("No solution!!")
