@@ -233,6 +233,11 @@ def setup():
     '''select one setup from location_propositions; also made sure we have exactly one pipe on each location'''
     grid_setup.append(location_propositions[0])
     grid_setup.append(location_propositions[random.randint(1, 10)])
+    #this for loop does the same thing as the rest of the code it's easier to read
+    #can decide if you want to use the for loop or hard code
+    ''' for i in range(11,82,10):
+        p = location_propositions[random.randint(i,i+9)]
+        grid_setup.append(p)'''
     p=location_propositions[random.randint(11, 20)]
     grid_setup.append(p)
     p=location_propositions[random.randint(21, 30)]
@@ -336,12 +341,9 @@ def find_paths(g: List[List[int]], src: int, dst: int, v: int, routes: List[int]
     int_routes = []
     routes = [str(i) for i in routes]
     grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
-
-
     src = 0
     dst = 10
     v = 11
-
     find_paths(grid,src,dst,v,int_routes)
 
     print(f"this is the amount of possible routes:{len(int_routes)}")
@@ -378,7 +380,7 @@ def example_theory():
             E.add_constraint(Location(['W'], g.location))
         elif g.pipe in THREE_OPENING_PIPE:
             '''constraint to make sure the pipe can be 3 opening pipe with different orientation at the same location'''
-            #3-opening can not be -| shape beside end piece or |-beside start piece 
+            #3-opening can not be -| shape beside end piece or |-beside start piece
             if g.location == '11':
                 E.add_constraint((~Location(['N','S','E'], g.location))&(~TwoPipeConnection(['E'], ['N','S','E'], '10', g.location)))
             elif g.location == '33':
@@ -390,13 +392,13 @@ def example_theory():
             #DOWN_RIGHT and DOWN_LEFT will be location 12
             #UP_RIGHT and DOWN_RIGHT will be location 21
             #UP_LEFT and DOWN_LEFT will be location 23 #partial true, need limit
-            #TODO:connection check for each location
+            #TODO:connection check for each location 
             if g.location == '11':
                 E.add_constraint((Location(['S','W'], g.location))&(TwoPipeConnection(['E'], ['S','W'], '10', g.location)))
             elif g.location == '12':
                 E.add_constraint((Location(['S','E'], g.location))|Location(['W','S'], g.location))
             elif g.location == '21':
-                E.add_constraint((Location(['S','E'], g.location))|Location(['N','E'], g.location))
+                E.add_constraint(((Location(['S','E'], g.location))|Location(['N','E'], g.location)))
             elif g.location == '23':
                 E.add_constraint((Location(['S','W'], g.location))|Location(['N','W'], g.location))
             elif g.location == '32':
@@ -414,13 +416,13 @@ def example_theory():
             #(UD) for location 21 and 23 #if it is in the solution routes, it will be like this limit 
             # TODO: and connected to 11 if pipe on it have 'E' opeing and connected 13 only if they have opening 'W'
             elif g.location == '12':
-                E.add_constraint((Location(['E','W'], g.location)))
+                E.add_constraint((Location(['E','W'], g.location)) & (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '21':
-                E.add_constraint((Location(['N','S'], g.location)))
+                E.add_constraint((Location(['N','S'], g.location)) & (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '23':
-                E.add_constraint((Location(['N','S'], g.location)))
+                E.add_constraint((Location(['N','S'], g.location)) & (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '32':
-                E.add_constraint((Location(['E','W'], g.location)))
+                E.add_constraint((Location(['E','W'], g.location)) & (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '13':#if it is at 13, it can not connect to 12 or 23
                 E.add_constraint((Location(g.pipe, g.location))&(~TwoPipeConnection(grid_setup[2].pipe, g.pipe, grid_setup[2].location, g.location)&(~TwoPipeConnection(g.pipe, grid_setup[6].pipe, g.location, grid_setup[6].location))))
             elif g.location == '31':#if it is at 31, it stay same oreietation but no connction to the pipe at location 32 or 21
@@ -431,11 +433,21 @@ def example_theory():
                 '''constraint to make sure the pipe can be 2 opening straint pipe with different orientation at the same location'''
                 E.add_constraint(Location(['N','S'], g.location)|Location(['E','W'], g.location))
         
-        
     '''start and end piece ['E'] and ['W'] can not be connected directly'''
     E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '11'))
 
-
+    #this is to check whether or not two pipes are connected
+    #note that one pipe can be connected to multiple pipes
+    for i in range(1,len(grid_setup)):
+        counter = 0
+        for j in range(i+1,len(grid_setup)):
+            if counter>4:
+                counter = 0
+                break
+            if ('E' in grid_setup[i].pipe and 'W' in grid_setup[j].pipe) or ('S' in grid_setup[i].pipe and 'N' in grid_setup[j].pipe):
+                E.add_constraint(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location))
+            counter = counter+1
+            
     #corner 33 34 #angled pipe beside end piece can only be angled(down_left) pipe
     #E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['S','E'],'33'))))>>(Location(['N', 'E'],'33')))
     #corner 10 11 #angled pipe beside start piece can only be angled(down_right) pipe
@@ -548,7 +560,7 @@ def example_theory():
                             possible_connectionslr.append(c)
     possible_connectionslr.remove([['E'], ['W']])
     #constraint.add_exactly_one(E, possible_connectionslr)
-
+    
     
     '''for one location, there are at least one and at most 4 neighbor'''
     '''TODO: rewrite this so it is working, also 10 cannot connect to 34, 11 cannot connect to 33, 12 cannot connect to 32, 13 cannot connect to 31
