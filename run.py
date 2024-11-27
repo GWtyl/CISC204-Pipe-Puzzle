@@ -26,7 +26,7 @@ ORIENTATIONS = list('NSEW')
      S   
 '''
 '''this is a list of all possible locations that a pipe can be at'''
-LOCATIONS = ['10', '11' , '12', '13','14' , '21', '22', '23','24', '31', '32', '33', '34','41','42','43','44','45']
+LOCATIONS = ['10', '11' , '12', '13' , '21', '22', '23', '31', '32', '33', '34']
 
 '''this list is a list of all possible neighbours pairs that connect from up to down(N and S)'''
 NEIGHBORUD = [['11','21'],['12','22'],['13','23'],['21','31'],['22','32'],['23','33']]
@@ -222,7 +222,7 @@ location_propositions = []
 for l in LOCATIONS:
     if(l == '10'):
         location_propositions.append(Location(PIPE_TYPE[1], l))
-    elif(l == '45'):
+    elif(l == '34'):
         location_propositions.append(Location(PIPE_TYPE[0], l))
     else:
         for i in range(2,len(PIPE_TYPE)):
@@ -307,33 +307,19 @@ def convert_value(val):
             case 3:
                 new_val.append(13)
             case 4:
-                new_val.append(14)
-            case 5:
                 new_val.append(21)
-            case 6:
+            case 5:
                 new_val.append(22)
-            case 7:
+            case 6:
                 new_val.append(23)
-            case 8:
-                new_val.append(24)
-            case 9:
+            case 7:
                 new_val.append(31)
-            case 10:
+            case 8:
                 new_val.append(32)
-            case 11:
+            case 9:
                 new_val.append(33)
-            case 12:
+            case 10:
                 new_val.append(34)
-            case 13:
-                new_val.append(41)
-            case 14:
-                new_val.append(42)
-            case 15:
-                new_val.append(43)
-            case 16:
-                new_val.append(44)
-            case 17:
-                new_val.append(45)
             case _:
                 new_val.append("does not exist")
     return new_val
@@ -374,15 +360,14 @@ def find_paths(g: List[List[int]], src: int, dst: int, v: int, routes: List[int]
     int_routes = []
     routes = [str(i) for i in routes]
     grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
-    grid_4x4 = [[1],[2,5],[1,3,6],[2,4,7],[3,8],[1,6,9],[5,2,8,10],[6,3,8,11],[7,4,12],[5,10,13],
-                [9,6,11,14],[10,17,12,15],[11,8,16],[9,14],[13,10,15],[14,11,16],[15,12,17],[]]
-    new_dst = 17
+
+
     src = 0
     dst = 10
     v = 11
-    new_v = 18
-    #find_paths(grid,src,dst,v,int_routes)
-    find_paths(grid_4x4,src,new_dst,new_v,int_routes)
+
+    find_paths(grid,src,dst,v,int_routes)
+
     print(f"this is the amount of possible routes:{len(int_routes)}")
     #this is to convert all the values of int routes to string and put them in the routes list
     for i in int_routes:
