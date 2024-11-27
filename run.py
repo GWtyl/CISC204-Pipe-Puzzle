@@ -249,20 +249,6 @@ def setup():
     grid_setup.append(p)
     p=location_propositions[random.randint(81, 90)]
     grid_setup.append(p)
-    p=location_propositions[random.randint(91, 100)]
-    grid_setup.append(p)
-    p=location_propositions[random.randint(101, 110)]
-    grid_setup.append(p)
-    p=location_propositions[random.randint(111, 120)]
-    grid_setup.append(p)
-    p=location_propositions[random.randint(121, 130)]
-    grid_setup.append(p)
-    p=location_propositions[random.randint(131, 140)]
-    grid_setup.append(p)
-    p=location_propositions[random.randint(141, 150)]
-    grid_setup.append(p)
-    p=location_propositions[random.randint(151, 160)]
-    grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
     #TODO: only same pipe and different orientation will be allowed(constraint)
     for g in grid_setup:
