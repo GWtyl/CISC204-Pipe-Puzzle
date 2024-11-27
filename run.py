@@ -209,7 +209,7 @@ class FancyPropositions:
 a = Location(['E'],'10')# there must have a start piece at 10
 b = Location(['W'],'34')# there must have a end piece at 34
 c = TwoPipeConnection(['E'], ['W'], '10', '11')#start and end piece ['E'] and ['W'] will not be connected directly
-d = Neighbor('10', '34')
+d = Neighbor('11', '21')#11 and 21 are neighbors
 e = FancyPropositions("e")
 
 # At least one of these will be true
@@ -250,17 +250,7 @@ def setup():
     p=location_propositions[random.randint(81, 90)]
     grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
-    #TODO: only same pipe and different orientation will be allowed(constraint)
-    for g in grid_setup:
-        if g.pipe in STRAIGHT_PIPE:
-            '''constraint to make sure the pipe can be 2 opening straint pipe with different orientation at the same location'''
-            E.add_constraint(Location(['N','S'], g.location)|Location(['E','W'], g.location))
-        elif g.pipe in ANGLED_PIPE:
-            '''constraint to make sure the pipe can be 2 opening angled pipe with different orientation at the same location'''
-            E.add_constraint(Location(['N','W'], g.location)|Location(['N','E'], g.location)|Location(['S','E'], g.location)|Location(['S','W'], g.location))
-        elif g.pipe in THREE_OPENING_PIPE:
-            '''constraint to make sure the pipe can be 3 opening pipe with different orientation at the same location'''
-            E.add_constraint(Location(['N','S','E'], g.location)|Location(['N','S','W'], g.location)|Location(['N','E','W'], g.location)|Location(['S','E','W'], g.location))
+    
 #print(f"this is the grid setup: \n{grid_setup}")
 #-> means the function should return nothing
 # path: List[int] means the path variable should be a list of integers
@@ -380,27 +370,79 @@ If there is a pipe in the original configuration and the correct path requires t
 
 """
 def example_theory():
+    #TODO: only same pipe and different orientation will be allowed(constraint)
+    for g in grid_setup:
+        if g.location == '10':#start piece can only have ['E'] orientation
+            E.add_constraint(Location(['E'], g.location))
+        elif g.location == '34':#end piece can only have ['W'] orientation
+            E.add_constraint(Location(['W'], g.location))
+        elif g.pipe in THREE_OPENING_PIPE:
+            '''constraint to make sure the pipe can be 3 opening pipe with different orientation at the same location'''
+            #3-opening can not be -| shape beside end piece or |-beside start piece 
+            if g.location == '11':
+                E.add_constraint((~Location(['N','S','E'], g.location))&(~TwoPipeConnection(['E'], ['N','S','E'], '10', g.location)))
+            elif g.location == '33':
+                E.add_constraint((~Location(['N', 'S', 'W'], g.location))&(~TwoPipeConnection(['N', 'S', 'W'], ['W'], g.location, '11')))
+            else:
+                E.add_constraint(Location(['N','S','E'], g.location)|Location(['N','S','W'], g.location)|Location(['N','E','W'], g.location)|Location(['S','E','W'], g.location))
+        elif g.pipe in ANGLED_PIPE:
+            #UP_RIGHT and UP_LEFT will be location 32
+            #DOWN_RIGHT and DOWN_LEFT will be location 12
+            #UP_RIGHT and DOWN_RIGHT will be location 21
+            #UP_LEFT and DOWN_LEFT will be location 23 #partial true, need limit
+            #TODO:connection check for each location
+            if g.location == '11':
+                E.add_constraint((Location(['S','W'], g.location))&(TwoPipeConnection(['E'], ['S','W'], '10', g.location)))
+            elif g.location == '12':
+                E.add_constraint((Location(['S','E'], g.location))|Location(['W','S'], g.location))
+            elif g.location == '21':
+                E.add_constraint((Location(['S','E'], g.location))|Location(['N','E'], g.location))
+            elif g.location == '23':
+                E.add_constraint((Location(['S','W'], g.location))|Location(['N','W'], g.location))
+            elif g.location == '32':
+                E.add_constraint((Location(['N','W'], g.location))|Location(['S','E'], g.location))
+            elif g.location == '33':
+                E.add_constraint((Location(['N','E'], g.location))&(TwoPipeConnection(['N','E'], ['W'], g.location, '34')))           
+            else:
+                '''constraint to make sure the pipe can be 2 opening angled pipe with different orientation at the same location'''
+                E.add_constraint(Location(['N','W'], g.location)|Location(['N','E'], g.location)|Location(['S','E'], g.location)|Location(['S','W'], g.location))
+        elif g.pipe in STRAIGHT_PIPE:#maybe constraint this last so it can use the constraint above
+            #this make sure only straight pipe(LR) can be beside start and end piece and they are not connected
+            if g.location == '11':
+                E.add_constraint((Location(['E','W'], g.location))&TwoPipeConnection(['E'], ['E','W'], '10', g.location))
+            #(LR) for location 12 and 32 
+            #(UD) for location 21 and 23 #if it is in the solution routes, it will be like this limit 
+            # TODO: and connected to 11 if pipe on it have 'E' opeing and connected 13 only if they have opening 'W'
+            elif g.location == '12':
+                E.add_constraint((Location(['E','W'], g.location)))
+            elif g.location == '21':
+                E.add_constraint((Location(['N','S'], g.location)))
+            elif g.location == '23':
+                E.add_constraint((Location(['N','S'], g.location)))
+            elif g.location == '32':
+                E.add_constraint((Location(['E','W'], g.location)))
+            elif g.location == '13':#if it is at 13, it can not connect to 12 or 23
+                E.add_constraint((Location(g.pipe, g.location))&(~TwoPipeConnection(grid_setup[2].pipe, g.pipe, grid_setup[2].location, g.location)&(~TwoPipeConnection(g.pipe, grid_setup[6].pipe, g.location, grid_setup[6].location))))
+            elif g.location == '31':#if it is at 31, it stay same oreietation but no connction to the pipe at location 32 or 21
+                E.add_constraint((Location(g.pipe, g.location))&(~TwoPipeConnection(g.pipe, grid_setup[8].pipe, g.location, grid_setup[8].location)&(~TwoPipeConnection(g.pipe, grid_setup[4].pipe, g.location, grid_setup[4].location))))
+            elif g.location == '33':
+                E.add_constraint((Location(['E','W'], g.location))&TwoPipeConnection(['E','W'], ['W'], g.location, '34'))
+            else:#any other location(22) have 2 possible orientation: straight pipe(LR) or straight pipe(UD)
+                '''constraint to make sure the pipe can be 2 opening straint pipe with different orientation at the same location'''
+                E.add_constraint(Location(['N','S'], g.location)|Location(['E','W'], g.location))
+        
+        
     '''start and end piece ['E'] and ['W'] can not be connected directly'''
     E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '11'))
 
-    '''start and end piece ['E'] and ['W'] need to be at 10 and 34'''
-    E.add_constraint(Location(['E'],'10'))
-    E.add_constraint(Location(['W'],'34'))
 
-    '''some pieces beside each other can only be connected in one way'''
-    #straight(UD) pipe beside end piece can only be straight(LR) pipe
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S'],'33')))>>(Location(['E', 'W'],'33')))
-    #straight(UD) pipe beside start piece can only be straight(LR) pipe
-    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[0].pipe, '10', '11') & (Location(['N', 'S'], '11'))) >> (Location(['E', 'W'], '11')))
     #corner 33 34 #angled pipe beside end piece can only be angled(down_left) pipe
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['S','E'],'33'))))>>(Location(['N', 'E'],'33')))
+    #E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['S','E'],'33'))))>>(Location(['N', 'E'],'33')))
     #corner 10 11 #angled pipe beside start piece can only be angled(down_right) pipe
-    E.add_constraint((~TwoPipeConnection(['E'], grid_setup[len(grid_setup)-1].pipe, '10', '11') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['N','E'],'33'))))>>(Location(['S', 'W'],'33')))
+    #E.add_constraint((~TwoPipeConnection(['E'], grid_setup[len(grid_setup)-1].pipe, '10', '11') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['N','E'],'33'))))>>(Location(['S', 'W'],'33')))
     
-    #TODO: rewrite this 3-opening can not be -| shape beside end piece or |-beside start piece 
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33')&(Location(['N', 'S','W'],'33')))>>((Location(['N', 'E', 'W'],'33'))|(Location(['N', 'S', 'E'],'33'))|(Location(['S', 'E', 'W'],'33'))))
-
-    E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '10', '11')&(Location(['N', 'S','E'],'33')))>>((Location(['N', 'E', 'W'],'33'))|(Location(['N', 'S', 'W'],'33'))|(Location(['S', 'E', 'W'],'33'))))
+    
+    
     
     '''nested loop go though LOCATION and check if they are in the NEIGHBORUD or NEIGHBORLR
     if they are, then they are neighbor and add them to the constraint
@@ -528,23 +570,32 @@ def example_theory():
     
     return E
 
-
+def display_solution(S, only_tile_placement=False):
+    true_props = set()
+    for k in S:
+        if S[k] and (not only_tile_placement or '@' in str(k)):
+            true_props.add(str(k))
+            # print(k)
+    print("\n".join(sorted(true_props)))
 if __name__ == "__main__":
     setup()
     # #this print[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
     T = T.compile()
-    '''print constraint'''
-    '''for constraint in E.constraints:
-        print(constraint)'''
+    S = T.solve()
+    if S:
+        display_solution(S, only_tile_placement=True)
+        tile_placement = [p for p in S if '@' in str(p)]
+    else:
+        print("No solution!!")
     # After compilation (and only after), you can check some of the properties
     # of your model:
     
-    print("\nSatisfiable: %s" % T.satisfiable())#True
+    '''print("\nSatisfiable: %s" % T.satisfiable())#True
     print("# Solutions: %d" % count_solutions(T))#number of solutions
     print("   Solution: %s" % T.solve())#solution
-    
+    '''
     print("\nVariable likelihoods:")
     for v,vn in zip([a,b,c,d,y,z], 'abcdyz'):
         # Ensure that you only send these functions NNF formulas
