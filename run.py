@@ -269,7 +269,31 @@ grid_setup = [
     Location(['W'], '34')
 ]
 #just pick one setup from for now
-
+def location_to_index(l):
+    if l == '10':
+        return 0
+    elif l == '11':
+        return 1
+    elif l == '12':
+        return 2
+    elif l == '13':
+        return 3
+    elif l == '21':
+        return 4
+    elif l == '22':
+        return 5
+    elif l == '23':
+        return 6
+    elif l == '31':
+        return 7
+    elif l == '32':
+        return 8
+    elif l == '33':
+        return 9
+    elif l == '34':
+        return 10
+    else:
+        return -1
 #-> means the function should return nothing
 # path: List[int] means the path variable should be a list of integers
 #this function is to print the traversable path from starting pipe to ending pipe
@@ -324,7 +348,7 @@ src: the starting point
 dst: the ending point
 v: number of verticies
 '''    
-routes = []
+
 def find_paths(g: List[List[int]], src: int, dst: int, v: int, routes: List[int]) -> None:
     #queue to store the paths
     q = deque()
@@ -350,22 +374,23 @@ def find_paths(g: List[List[int]], src: int, dst: int, v: int, routes: List[int]
                 q.append(new_path)
     
         
-    #all possible routes for the grid
-    int_routes = []
-    routes = [str(i) for i in routes]
-    grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
-    src = 0
-    dst = 10
-    v = 11
-    find_paths(grid,src,dst,v,int_routes)
+#all possible routes for the grid
+int_routes = []
+routes = []
+routes = [str(i) for i in routes]
+grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
+src = 0
+dst = 10
+v = 11
+find_paths(grid,src,dst,v,int_routes)
 
-    print(f"this is the amount of possible routes:{len(int_routes)}")
-    #this is to convert all the values of int routes to string and put them in the routes list
-    for i in int_routes:
-        temp= []
-        for j in i:
-            temp.append(str(j))
-        routes.append(temp)
+#(f"this is the amount of possible routes:{len(int_routes)}")
+#this is to convert all the values of int routes to string and put them in the routes list
+for i in int_routes:
+    temp= []
+    for j in i:
+        temp.append(str(j))
+    routes.append(temp)
 '''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'] and ['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
 #TODO: constraint to make sure the path is valid; use proposition location connecvted to location CL(l1,l2)(constraint)
 for i in range(len(routes)):
@@ -399,7 +424,7 @@ def example_theory():
             elif g.location == '33':
                 E.add_constraint((~Location(['N', 'S', 'W'], g.location))&(~TwoPipeConnection(['N', 'S', 'W'], ['W'], g.location, '11')))
             else:
-                E.add_constraint(Location(['N','S','E'], g.location)|Location(['N','S','W'], g.location)|Location(['N','E','W'], g.location)|Location(['S','E','W'], g.location))
+                constraint.add_exactly_one(E, [Location(['N','S','E'], g.location), Location(['N','S','W'], g.location), Location(['N','E','W'], g.location), Location(['S','E','W'], g.location)])
         elif g.pipe in ANGLED_PIPE:
             #UP_RIGHT and UP_LEFT will be location 32
             #DOWN_RIGHT and DOWN_LEFT will be location 12
@@ -408,56 +433,24 @@ def example_theory():
             #TODO:connection check for each location 
             if g.location == '11':
                 E.add_constraint((Location(['S','W'], g.location))&(TwoPipeConnection(['E'], ['S','W'], '10', g.location)))
-            elif g.location == '12':
-                E.add_constraint((Location(['S','E'], g.location))|Location(['S','W'], g.location))
-            elif g.location == '21':
-                E.add_constraint(((Location(['S','E'], g.location))|Location(['N','E'], g.location)))
-            elif g.location == '23':
-                E.add_constraint((Location(['S','W'], g.location))|Location(['N','W'], g.location))
-            elif g.location == '32':
-                E.add_constraint((Location(['N','W'], g.location))|Location(['S','E'], g.location))
             elif g.location == '33':
                 E.add_constraint((Location(['N','E'], g.location))&(TwoPipeConnection(['N','E'], ['W'], g.location, '34')))           
-            else:
-                '''constraint to make sure the pipe can be 2 opening angled pipe with different orientation at the same location'''
-                E.add_constraint(Location(['N','W'], g.location)|Location(['N','E'], g.location)|Location(['S','E'], g.location)|Location(['S','W'], g.location))
         elif g.pipe in STRAIGHT_PIPE:#maybe constraint this last so it can use the constraint above
             #this make sure only straight pipe(LR) can be beside start and end piece and they are not connected
             if g.location == '11':
                 E.add_constraint((Location(['E','W'], g.location))&TwoPipeConnection(['E'], ['E','W'], '10', g.location))
-            #(LR) for location 12 and 32 
-            #(UD) for location 21 and 23 #if it is in the solution routes, it will be like this limit 
-            # TODO: and connected to 11 if pipe on it have 'E' opeing and connected 13 only if they have opening 'W'
-            elif g.location == '12':
-                E.add_constraint((Location(['E','W'], g.location))) #& (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
-            elif g.location == '21':
-                E.add_constraint((Location(['N','S'], g.location))) #& (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
-            elif g.location == '23':
-                E.add_constraint((Location(['N','S'], g.location))) #& (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
-            elif g.location == '32':
-                E.add_constraint((Location(['E','W'], g.location)) )#& (~TwoPipeConnection(grid_setup[5].pipe,g.pipe,grid_setup[5].location, g.location)))
             elif g.location == '13':#if it is at 13, it can not connect to 12 or 23
                 E.add_constraint((Location(g.pipe, g.location))&(~TwoPipeConnection(grid_setup[2].pipe, g.pipe, grid_setup[2].location, g.location)&(~TwoPipeConnection(g.pipe, grid_setup[6].pipe, g.location, grid_setup[6].location))))
             elif g.location == '31':#if it is at 31, it stay same oreietation but no connction to the pipe at location 32 or 21
                 E.add_constraint((Location(g.pipe, g.location))&(~TwoPipeConnection(g.pipe, grid_setup[8].pipe, g.location, grid_setup[8].location)&(~TwoPipeConnection(g.pipe, grid_setup[4].pipe, g.location, grid_setup[4].location))))
             elif g.location == '33':
                 E.add_constraint((Location(['E','W'], g.location))&TwoPipeConnection(['E','W'], ['W'], g.location, '34'))
-            else:#any other location(22) have 2 possible orientation: straight pipe(LR) or straight pipe(UD)
+            elif  g.location == '22':#any other location(22) have 2 possible orientation: straight pipe(LR) or straight pipe(UD)
                 '''constraint to make sure the pipe can be 2 opening straint pipe with different orientation at the same location'''
-                E.add_constraint(Location(['N','S'], g.location)|Location(['E','W'], g.location))
+                constraint.add_exactly_one(E, [Location(['E','W'], g.location), Location(['N','S'], g.location)])
         
     '''start and end piece ['E'] and ['W'] can not be connected directly'''
     E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '34'))
-    
-    
-            
-    #corner 33 34 #angled pipe beside end piece can only be angled(down_left) pipe
-    #E.add_constraint((~TwoPipeConnection(['W'], grid_setup[len(grid_setup)-1].pipe, '34', '33') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['S','E'],'33'))))>>(Location(['N', 'E'],'33')))
-    #corner 10 11 #angled pipe beside start piece can only be angled(down_right) pipe
-    #E.add_constraint((~TwoPipeConnection(['E'], grid_setup[len(grid_setup)-1].pipe, '10', '11') & ((Location(['N', 'W'],'33')) | (Location(['S','W'],'33'))| (Location(['N','E'],'33'))))>>(Location(['S', 'W'],'33')))
-    
-    
-    
     
     '''nested loop go though LOCATION and check if they are in the NEIGHBORUD or NEIGHBORLR
     if they are, then they are neighbor and add them to the constraint
@@ -478,46 +471,68 @@ def example_theory():
                 counter = 0
                 break
             if ('E' in grid_setup[i].pipe and 'W' in grid_setup[j].pipe) or ('S' in grid_setup[i].pipe and 'N' in grid_setup[j].pipe):
-                E.add_constraint((Neighbor(grid_setup[i].location,grid_setup[j].location)|Neighbor(grid_setup[j].location,grid_setup[i].location))>>(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location)))
+                break
+                #print(f"pipe at {grid_setup[i].location} can connect to pipe at {grid_setup[j].location}")
+                #E.add_constraint((Neighbor(grid_setup[i].location,grid_setup[j].location)|Neighbor(grid_setup[j].location,grid_setup[i].location))>>(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location)))
             counter = counter+1
-    '''check if the grid setup have a solution, if it does, the solution will be one of the routes'''
-    #E.add_constraint((Is_solution(grid_setup))>>Or(*routes))
-    '''change all r in route from location to location_contain_pipe'''
-    #routes = [[['10','11'],['11','21'],['21','31'],['31','32'],['32','33'],['33','34']]]#test case contain 1 path
-    '''route_contain = []
-    for r in routes:#r is a path in routes
-        possible_contain = []
-        for i in range(1,len(r)-1):#loop through all location connection in path
-            #print(possible_contain)
-            if(i == 1 and r[i] in NEIGHBORLR):# the first grid will only habe two options, either go right(straight(LR)) or down(angled(down_left))
-                possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straight(LR) pipe
-            elif(i == 1 and r[i] in NEIGHBORUD):
-                possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))#angled(down_left) pipe
-            else:
-                if r[i] in NEIGHBORLR:#current connection is from left to right
-                    if(possible_contain[-1].c_pipetype == ['E','W']):#previous pipe is straight(LR) and 
-                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straight(LR) pipe
-                    elif(possible_contain[-1].c_pipetype == ['N','S']):#previous pipe is straight(UD) 
-                        possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))#angled(up_right) pipe
-                    elif(possible_contain[-1].c_pipetype == ['N','E']):#previous pipe is angled(top_right)
-                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straint(LR) pipe
-                    elif(possible_contain[-1].c_pipetype == ['E','W']):#previous pipe is straight(LR)
-                        possible_contain.append(contain_pt_at_Location(['E','W'],r[i][0]))#straint(LR) pipe
-                    elif(possible_contain[-1].c_pipetype == ['S','W']):#previous pipe is angled(down_left)
-                        possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))#angled(up_right) pipe
-                    elif(possible_contain[-1].c_pipetype == ['S','E']):#this cannot happen since all route goes right and down
-                        possible_contain.append(contain_pt_at_Location(['N','E'],r[i][0]))
-                elif(r[i] in NEIGHBORUD):#current connection is from up to down
-                    if(possible_contain[-1].c_pipetype == ['S','W']):#previous pipe is angled(down_left)
-                        possible_contain.append(contain_pt_at_Location(['N', 'S'],r[i][0]))#straight(UD) pipe
-                    elif(possible_contain[-1].c_pipetype == ['N','S']):#previous pipe is straight(UD)
-                        possible_contain.append(contain_pt_at_Location(['N','S'],r[i][0]))#straight(UD) pipe
-                    elif(possible_contain[-1].c_pipetype == ['E','W']):#previous pipe is straight(LR)
-                        possible_contain.append(contain_pt_at_Location(['S','W'],r[i][0]))#angled(down_left) pipe
-                    elif(possible_contain[-1].c_pipetype == ['S','E']):#this cannot happen since all route goes right and down
-                        possible_contain.append(contain_pt_at_Location(['N','S'],r[i][0]))
+    
+    '''find a list which contain 'E','W' and a list contain 'N','S' and a list contain 'N','E' and a list contain 'S','W' total of 4 list'''
+    list_EW = []
+    list_NS = []
+    list_NE = []
+    list_SW = []
+
+    for p in PIPE_TYPE:
+        if 'E' in p and 'W' in p:
+            list_EW.append(p)
+        if 'N' in p and 'S' in p:
+            list_NS.append(p)
+        if 'N' in p and 'E' in p:
+            list_NE.append(p)
+        if 'S' in p and 'W' in p:
+            list_SW.append(p)
+    '''TODO:use every route in routes to create a constraint that will make sure only these route is valid'''
+    '''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'] and ['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
+    '''#TODO: constraint to make sure the path is valid; use proposition location connecvted to location CL(l1,l2)(constraint)
+    for i in range(len(routes)):
+        for o in range(len(routes[i])-1):#this is to change the path from single one to a pair of location
+            routes[i][o] = [routes[i][o],routes[i][o+1]]'''
+    for r in routes[:6]:  # take the first 6 solution routes
+        for i in range(1, len(r) - 1):  # take one connection out of the route and skip the first and last location
+            if r[i] in NEIGHBORLR:  # current connection is from left to right and next connection is from left to right
+                if r[i - 1] in NEIGHBORLR:
+                    list_EW_as_constraint = []
+                    for p in list_EW:
+                        list_EW_as_constraint.append(Location(p, r[i][0]))
+                    if r[i][0] == '12' or r[i][0] == '32':
+                        E.add_constraint(Location(['E','W'], r[i][0]))
+            elif r[i] in NEIGHBORUD:  # current connection is from up to down and next connection is from up to down
+                if r[i - 1] in NEIGHBORUD:
+                    list_NS_as_constraint = []
+                    for p in list_NS:
+                        list_NS_as_constraint.append(Location(p, r[i][0]))
+                    #(LR) for location 12 and 32 
+                    #(UD) for location 21 and 23 #if it is in the solution routes
+                    if r[i][0] == '21' or r[i][0] == '23':
+                        E.add_constraint(Location(['N','S'], r[i][0]))
+                        #TODO: add constraint for connection
+            elif r[i] in NEIGHBORUD:  # current connection is from up to down and next connection is from left to right
+                if r[i - 1] in NEIGHBORLR:
+                    list_NE_as_constraint = []
+                    for p in list_NE:
+                        list_NE_as_constraint.append(Location(p, r[i][0]))
+                    E.add_constraint(Location(['N','E'], r[i][0]))
+                    #TODO: add other angled pipe constraint
+            elif r[i] in NEIGHBORLR:  # current connection is from left to right and next connection is from up to down
+                if r[i - 1] in NEIGHBORUD:
+                    list_SW_as_constraint = []
+                    for p in list_SW:
+                        list_SW_as_constraint.append(Location(p, r[i][0]))
+                    if r[i][0] == '12':
+                        E.add_constraint(Location(['S','W'], r[i][0]))
+                    
                 
-        route_contain.append(possible_contain)#overwrite the location to locarion_contain_pipe  '''  
+    
     #TODO: decide wheather this code will help the goal we currently have        
     '''check if how many pairs on grid is connected.if they are connected, add them to constriant
     loop through NeighborUD and NeighborLR
@@ -601,13 +616,13 @@ def display_solution(S, want=False):
     true_props = set()
     for k in S:
         if S[k] and (not want or '@' in str(k)):
-            true_props.add(str(k))
-            # print(k)
-    print("\n".join(sorted(true_props)))
+            true_props.add(str(k)+' is '+str(S[k]))
+    print("\n".join(true_props))
 if __name__ == "__main__":
     #setup()
     #print(f"this is the grid setup: \n{grid_setup}")
-
+    for r in routes[:6]:    
+        print(r)
     # #this print[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
@@ -615,7 +630,6 @@ if __name__ == "__main__":
     S = T.solve()
     if S:
         display_solution(S, True)
-        tile_placement = [p for p in S if '@' in str(p)]
     else:
         print("No solution!!")
     # After compilation (and only after), you can check some of the properties
@@ -623,8 +637,8 @@ if __name__ == "__main__":
     
     '''print("\nSatisfiable: %s" % T.satisfiable())#True
     print("# Solutions: %d" % count_solutions(T))#number of solutions
-    print("   Solution: %s" % T.solve())#solution
-    '''
+    print("   Solution: %s" % T.solve())#solution'''
+    
     print("\nVariable likelihoods:")
     for v,vn in zip([a,b,c,d,y,z], 'abcdyz'):
         # Ensure that you only send these functions NNF formulas
@@ -632,12 +646,3 @@ if __name__ == "__main__":
         print(" %s: %.2f" % (vn, likelihood(T, v)))
 
     #E.introspect(T)
-    # Check if the problem has any solution and find all solutions
-    
-    
-    #print(f"connect: {connected_pipe}")
-    
-    #print(len(location_propositions))
-    #print(len(pos_for_11))
-    #print(possible_connectionsud)
-    #print(f"grid setup: {grid_setup}")
