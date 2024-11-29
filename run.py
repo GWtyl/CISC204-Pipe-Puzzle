@@ -7,7 +7,7 @@ from nnf import config
 config.sat_backend = "kissat"
 '''import random'''
 import random
-
+import copy
 '''import for BFS algorithm for finding all paths'''
 from typing import List
 from collections import deque
@@ -68,7 +68,8 @@ THREE_OPENING_PIPE = [['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', '
 # #this print[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
 
 '''the type of pipe(straight, angled, three_opening) can opens to these orientations'''
-@proposition(E)
+#TODO:may not use this; may need to delete
+'''@proposition(E)
 class Straight_Pipe(object): 
     def __init__(self, type, pipe_specific) -> None:
         assert type in TYPE
@@ -95,7 +96,7 @@ class Three_Opening_Pipe(object):
         self.type = type
         self.pipe_specific = pipe_specific
     def _prop_name(self):
-        return f"({self.type} opens {self.pipe_specific})"
+        return f"({self.type} opens {self.pipe_specific})"'''
 
 
 '''given pipe is at given location; this works for the setup'''
@@ -128,28 +129,27 @@ class TwoPipeConnection(object):
         return f"({self.pipe1}@{self.location1} is connected to {self.pipe2}@{self.location2})"
 
 '''this is a pipetype
-TODO: may need to separate this into 5 different classes()'''
-@proposition(E)
+TODO: may not use this; may need to delete'''
+'''@proposition(E)
 class PipeType(object):
     def __init__(self, pipe) -> None:
         assert pipe in PIPE_TYPE
         self.pipe = pipe
 
     def _prop_name(self):
-        return f"PipeType({self.pipe})"
+        return f"PipeType({self.pipe})"'''
     
-'''TODO: what does this do?'''
-#J: does this check for whether or not the pipes are connected?
+'''the pipes at these location are connected'''
 @proposition(E)
 class Connected(object):
-    def __init__(self, pipe1, pipe2) -> None:
-        assert pipe1 in PIPE_TYPE
-        assert pipe2 in PIPE_TYPE
-        self.pipe1 = pipe1
-        self.pipe2 = pipe2
+    def __init__(self, l1, l2) -> None:
+        assert l1 in LOCATIONS
+        assert l2 in LOCATIONS
+        self.l1 = l1
+        self.l2 = l2
 
     def _prop_name(self):
-        return f"Connected({self.pipe1}, {self.pipe2})"
+        return f"Connected({self.l1}, {self.l2})"
 
 '''given pipe is a given pipe type (like straight, angled, three_opening)'''
 @proposition(E)
@@ -266,6 +266,7 @@ def setup():
     p=location_propositions[random.randint(81, 90)]
     grid_setup.append(p)'''
     grid_setup.append(location_propositions[len(location_propositions)-1])
+#have one solution
 grid_setup = [
     Location(['E'], '10'),
     Location(['N', 'W'], '11'),
@@ -279,6 +280,50 @@ grid_setup = [
     Location(['N', 'S', 'E'], '33'),
     Location(['W'], '34')
 ]
+'''grid_setup = [
+    Location(['E'], '10'),
+    Location(['S', 'E'], '11'),
+    Location(['N', 'E'], '12'),
+    Location(['N', 'S', 'W'], '13'),
+    Location(['N', 'W'], '21'),
+    Location(['S', 'W'], '22'),
+    Location(['N', 'W'], '23'),
+    Location(['E', 'W'], '31'),
+    Location(['S', 'E', 'W'], '32'),
+    Location(['N', 'S', 'W'], '33'),
+    Location(['W'], '34')
+]'''
+
+'''grid_setup = [
+    Location(['E'], '10'),
+    Location(['S', 'W'], '11'),
+    Location(['S', 'E', 'W'], '12'),
+    Location(['N', 'S','E'], '13'),
+    Location(['N', 'S'], '21'),
+    Location(['N','E','W'], '22'),
+    Location(['N', 'W'], '23'),
+    Location(['N', 'E', 'W'], '31'),
+    Location(['N', 'W'], '32'),
+    Location(['N','E', 'W'], '33'),
+    Location(['W'], '34')
+]'''
+'''#set all pipe on grid to angled pipe(UP-down)should have no solution
+grid_setup = [
+    Location(['E'], '10'),
+    Location(['S', 'W'], '11'),
+    Location(['S', 'W'], '12'),
+    Location(['S', 'W'], '13'),
+    Location(['S', 'W'], '12'),
+    Location(['N', 'S'], '21'),
+    Location(['N', 'S'], '22'),
+    Location(['N', 'S'], '23'),
+    Location(['N', 'S'], '31'),
+    Location(['N', 'S'], '32'),
+    Location(['N', 'S'], '33'),
+    Location(['W'], '34')
+]'''
+
+
 #just pick one setup from for now
 def location_to_index(l):
     if l == '10':
@@ -404,8 +449,8 @@ for i in int_routes:
     for j in i:
         temp.append(str(j))
     routes.append(temp)
-'''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'] and ['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
 
+'''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'] and ['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
 #TODO: constraint to make sure the path is valid; use proposition location connected to location CL(l1,l2)(constraint)
 for i in range(len(routes)):
     for o in range(len(routes[i])-1):#this is to change the path from single one to a pair of location
@@ -425,45 +470,21 @@ If there is a pipe in the original configuration and the correct path requires t
 
 """
 def example_theory():
-    #TODO: only same pipe and different orientation will be allowed(constraint)
     for g in grid_setup:
-        if g.location == '10':#start piece can only have ['E'] orientation
-            E.add_constraint(Location(['E'], g.location))
-        elif g.location == '34':#end piece can only have ['W'] orientation
-            E.add_constraint(Location(['W'], g.location))
-        elif g.pipe in THREE_OPENING_PIPE:
+        if g.pipe in THREE_OPENING_PIPE:
             '''constraint to make sure the pipe can be 3 opening pipe with different orientation at the same location'''
             #3-opening can not be -| shape beside end piece or |-beside start piece 
             if g.location == '11':
                 E.add_constraint((~Location(['N','S','E'], g.location))&(~TwoPipeConnection(['E'], ['N','S','E'], '10', g.location)))
             elif g.location == '33':
                 E.add_constraint((~Location(['N', 'S', 'W'], g.location))&(~TwoPipeConnection(['N', 'S', 'W'], ['W'], g.location, '11')))
-            else:
-                constraint.add_exactly_one(E, [Location(['N','S','E'], g.location), Location(['N','S','W'], g.location), Location(['N','E','W'], g.location), Location(['S','E','W'], g.location)])
-        elif g.pipe in ANGLED_PIPE:
-            #UP_RIGHT and UP_LEFT will be location 32
-            #DOWN_RIGHT and DOWN_LEFT will be location 12
-            #UP_RIGHT and DOWN_RIGHT will be location 21
-            #UP_LEFT and DOWN_LEFT will be location 23 #partial true, need limit
-            #TODO:connection check for each location 
-            if g.location == '11':
-                E.add_constraint((Location(['S','W'], g.location))&(TwoPipeConnection(['E'], ['S','W'], '10', g.location)))
-            elif g.location == '33':
-                E.add_constraint((Location(['N','E'], g.location))&(TwoPipeConnection(['N','E'], ['W'], g.location, '34')))           
         elif g.pipe in STRAIGHT_PIPE:#maybe constraint this last so it can use the constraint above
-            #this make sure only straight pipe(LR) can be beside start and end piece and they are not connected
-            if g.location == '11':
-                E.add_constraint((Location(['E','W'], g.location))&TwoPipeConnection(['E'], ['E','W'], '10', g.location))
-            elif g.location == '13':#if it is at 13, it can not connect to 12 or 23
+            if g.location == '13':#if it is at 13, it can not connect to 12 or 23
                 E.add_constraint((Location(g.pipe, g.location))&(~TwoPipeConnection(grid_setup[2].pipe, g.pipe, grid_setup[2].location, g.location)&(~TwoPipeConnection(g.pipe, grid_setup[6].pipe, g.location, grid_setup[6].location))))
             elif g.location == '31':#if it is at 31, it stay same oreietation but no connction to the pipe at location 32 or 21
                 E.add_constraint((Location(g.pipe, g.location))&(~TwoPipeConnection(g.pipe, grid_setup[8].pipe, g.location, grid_setup[8].location)&(~TwoPipeConnection(g.pipe, grid_setup[4].pipe, g.location, grid_setup[4].location))))
-            elif g.location == '33':
-                E.add_constraint((Location(['E','W'], g.location))&TwoPipeConnection(['E','W'], ['W'], g.location, '34'))
-            elif  g.location == '22':#any other location(22) have 2 possible orientation: straight pipe(LR) or straight pipe(UD)
-                '''constraint to make sure the pipe can be 2 opening straint pipe with different orientation at the same location'''
-                constraint.add_exactly_one(E, [Location(['E','W'], g.location), Location(['N','S'], g.location)])
-        
+    E.add_constraint(Location(['E'], '10'))
+    E.add_constraint(Location(['W'], '34'))
     '''start and end piece ['E'] and ['W'] can not be connected directly'''
     E.add_constraint(~TwoPipeConnection(['E'], ['W'], '10', '34'))
     
@@ -476,85 +497,95 @@ def example_theory():
                 E.add_constraint(Neighbor(loc1, loc2))
             else:
                 E.add_constraint(~Neighbor(loc1, loc2))
-            """if [loc1, loc2] not in NEIGHBORUD and  [loc1, loc2] not in NEIGHBORLR:
-                E.add_constraint(~Neighbor(loc1, loc2))
-            elif [loc1, loc2] in NEIGHBORUD or [loc1, loc2] in NEIGHBORLR:
-                E.add_constraint(Neighbor(loc1, loc2))"""
     
-    #this is to check whether or not two pipes are connected
-    #note that one pipe can be connected to multiple pipes
-    tempconnect = []
-    #print(f"this is grid setup: \n {grid_setup}")
-    for i in range(1,len(grid_setup)-1):
-        pos1 = grid_setup[i]
-        pos2 = grid_setup[i+1]       
-        if(i == 3 or i== 6):
-            continue
-        elif ('E' in pos1.pipe and 'W' in pos2.pipe):
-            tempconnect.append([pos1,pos2])
-            E.add_constraint(Neighbor(pos1.location,pos2.location))
-            #print(f"pipe at {grid_setup[i].location} can connect to pipe at {grid_setup[j].location}")
-            #E.add_constraint((Neighbor(grid_setup[i].location,grid_setup[j].location)|Neighbor(grid_setup[j].location,grid_setup[i].location))>>(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location)))
-    for i in range(1,7):
-        pos1 = grid_setup[i]
-        pos2 = grid_setup[i+3]
-        if('S' in pos1.pipe and 'N' in pos2.pipe):
-            tempconnect.append([pos1,pos2])
-            E.add_constraint(Neighbor(pos1.location,pos2.location))
+    
+    '''    #this is to check whether or not two pipes are connected
+        #note that one pipe can be connected to multiple pipes
+        tempconnect = []
+        #print(f"this is grid setup: \n {grid_setup}")
+        for i in range(1,len(grid_setup)-1):
+            pos1 = grid_setup[i]
+            pos2 = grid_setup[i+1]       
+            if(i == 3 or i== 6):
+                continue
+            elif ('E' in pos1.pipe and 'W' in pos2.pipe):
+                tempconnect.append([pos1,pos2])
+                E.add_constraint(Neighbor(pos1.location,pos2.location))
+                #print(f"pipe at {grid_setup[i].location} can connect to pipe at {grid_setup[j].location}")
+                #E.add_constraint((Neighbor(grid_setup[i].location,grid_setup[j].location)|Neighbor(grid_setup[j].location,grid_setup[i].location))>>(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location)))
+        for i in range(1,7):
+            pos1 = grid_setup[i]
+            pos2 = grid_setup[i+3]
+            if('S' in pos1.pipe and 'N' in pos2.pipe):
+                tempconnect.append([pos1,pos2])
+                E.add_constraint(Neighbor(pos1.location,pos2.location))'''
             
     '''find a list which contain 'E','W' and a list contain 'N','S' and a list contain 'N','E' and a list contain 'S','W' total of 4 list'''
-    list_EW = []
-    list_NS = []
-    list_NE = []
-    list_SW = []
-
+    #may need to be delete
+    connect_right = []#-- #L
+    connect_down = []#|#¬
     for p in PIPE_TYPE:
-        if 'E' in p and 'W' in p:
-            list_EW.append(p)
-        if 'N' in p and 'S' in p:
-            list_NS.append(p)
-        if 'N' in p and 'E' in p:
-            list_NE.append(p)
-        if 'S' in p and 'W' in p:
-            list_SW.append(p)
+        if ('E' in p and 'W' in p) or ('N' in p and 'E' in p):
+            connect_right.append(p)
+        if ('N' in p and 'S' in p) or ('S' in p and 'W' in p):
+            connect_down.append(p)
+    #[['N', 'E'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'E', 'W'], ['S', 'E', 'W']]
+    #[['N', 'S'], ['S', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['S', 'E', 'W']]
     '''Use every route in routes to create a constraint that will make sure only these route is valid'''
-    #TODO: only add angled constraint if they have a angled pipe at the location in the setup    for r in routes[:6]:  # take the first 6 solution routes
+    #TODO: add constraint for 3-opening pipe
+    solutions = []
     for r in routes[:6]:  # take the first 6 solution routes
+        solution = []#decide if to keep this
+        replace_3_opening = []
         for i in range(1, len(r) - 1):  # take one connection out of the route and skip the first and last location
-            if r[i] in NEIGHBORLR:  # current connection is from left to right and next connection is from left to right
-                if r[i - 1] in NEIGHBORLR:
-                    list_EW_as_constraint = []
-                    for p in list_EW:
-                        list_EW_as_constraint.append(Location(p, r[i][0]))
-                    if (r[i][0] == '12' or r[i][0] == '32') and grid_setup[location_to_index(r[i][0])].pipe in STRAIGHT_PIPE:
-                        E.add_constraint(Location(['E','W'], r[i][0]))
-            elif r[i] in NEIGHBORUD:  # current connection is from up to down and next connection is from up to down
-                if r[i - 1] in NEIGHBORUD:
-                    list_NS_as_constraint = []
-                    for p in list_NS:
-                        list_NS_as_constraint.append(Location(p, r[i][0]))
-                    #(LR) for location 12 and 32 
-                    #(UD) for location 21 and 23 #if it is in the solution routes
-                    if (r[i][0] == '21' or r[i][0] == '23') and grid_setup[location_to_index(r[i][0])].pipe in STRAIGHT_PIPE:   
-                        E.add_constraint(Location(['N','S'], r[i][0]))
-                        #TODO: add constraint for connection
-            elif r[i] in NEIGHBORUD:  # current connection is from up to down and next connection is from left to right
-                if r[i - 1] in NEIGHBORLR:
-                    list_NE_as_constraint = []
-                    for p in list_NE:
-                        list_NE_as_constraint.append(Location(p, r[i][0]))
-                    if grid_setup(location_to_index(r[i][0])).pipe in ANGLED_PIPE:
-                        E.add_constraint(Location(['N','E'], r[i][0]))
-            elif r[i] in NEIGHBORLR:  # current connection is from left to right and next connection is from up to down
-                if r[i - 1] in NEIGHBORUD:
-                    list_SW_as_constraint = []
-                    for p in list_SW:
-                        list_SW_as_constraint.append(Location(p, r[i][0]))
-                    if (r[i][0] == '12'or r[i][0] == '13' or r[i][0] == '23') and grid_setup[location_to_index(r[i][0])].pipe in ANGLED_PIPE:
-                        E.add_constraint(Location(['S','W'], r[i][0]))
-                    
-                
+            if r[i-1] in NEIGHBORLR:  # previous connection is from left to right and next connection is from left to right
+                if r[i] in NEIGHBORLR:
+                    if grid_setup[location_to_index(r[i][0])].pipe in STRAIGHT_PIPE:
+                        if (r[i][0] == '12' or r[i][0] == '32' or r[i][0]=='22'or r[i][0]=='11' or r[i][0]=='33'):
+                            solution.append(Location(['E','W'], r[i][0]))
+                            #E.add_constraint((Location(['E','W'], '11'))&TwoPipeConnection(['E'], ['E','W'], '10', g.location))
+                            #E.add_constraint((Location(['E','W'], '33'))&TwoPipeConnection(['E','W'], ['W'], g.location, '34'))
+                    if grid_setup[location_to_index(r[i][0])].pipe in THREE_OPENING_PIPE:#need--
+                        solution.append((Location(['N', 'E', 'W'], r[i][0])))
+                        replace_3_opening.append(Location(['S', 'E', 'W'], r[i][0]))
+                elif r[i] in NEIGHBORUD:# current connection is from left to right and next connection is from up to down
+                    if grid_setup[location_to_index(r[i][0])].pipe in ANGLED_PIPE:
+                        if r[i][0] == '11'or r[i][0] == '12'or r[i][0] == '13' or r[i][0] == '23'or '22':
+                            solution.append(Location(['S','W'], r[i][0]))
+                            #E.add_constraint((Location(['S','W'], g.location))&(TwoPipeConnection(['E'], ['S','W'], '10', r[i][0])))
+                        elif r[i][0] == '33':
+                            solution.append(Location(['N','E'], r[i][0]))
+                            #E.add_constraint((Location(['N','E'], g.location))&(TwoPipeConnection(['N','E'], ['W'], r[i][0], '34'))) 
+                    if grid_setup[location_to_index(r[i][0])].pipe in THREE_OPENING_PIPE:#need-,
+                        solution.append((Location(['N', 'S', 'W'], r[i][0])))
+                        replace_3_opening.append(Location(['S', 'E', 'W'], r[i][0]))
+            elif r[i-1] in NEIGHBORUD:# previous connection is from up to down and next connection is from up to down
+                if r[i] in NEIGHBORUD:
+                    if (r[i][0] == '21' or r[i][0] == '23'or r[i][0]=='22') and grid_setup[location_to_index(r[i][0])].pipe in STRAIGHT_PIPE:   
+                        solution.append(Location(['N','S'], r[i][0]))
+                    if grid_setup[location_to_index(r[i][0])].pipe in THREE_OPENING_PIPE:#need |
+                        solution.append((Location(['N', 'S', 'E'], r[i][0])))# (Location(['N', 'S', 'W'], r[i][0]))
+                elif r[i] in NEIGHBORLR:# current connection is from up to down and next connection is from left to right
+                    if grid_setup[location_to_index(r[i][0])].pipe in ANGLED_PIPE:
+                        solution.append(Location(['N','E'], r[i][0]))
+                    #for 3-opening pipe#for 3-opening pipe:['N', 'S', 'E']|-, ['N', 'S', 'W']-|, ['N', 'E', 'W']-`-, ['S', 'E', 'W']-,-
+                    if grid_setup[location_to_index(r[i][0])].pipe in THREE_OPENING_PIPE:#need'-
+                        solution.append((Location(['N', 'E', 'W'], r[i][0])))
+                        replace_3_opening.append(Location(['N', 'S', 'E'], r[i][0]))
+        #print(f"this is the solution: {solution}")
+        if len(solution) ==5:
+            '''for i in range(len(solution)):
+                if solution[i].pipe '''
+            solutions.append(solution)
+    if len(solutions) != 0:
+        for s in solutions:
+            print(f'this is the solution: {s}')
+    else:
+        print("No solution")
     
+    
+    #if there is a ['N', 'E', 'W'] or ['S', 'E', 'W'] at 11, and Location 12 have corner piece, then 12 must be ['S', 'W'] and location 11 and 12 will be conncted
+#TODO: check if there are a constraint to pipe that can be connected from start to end    
     #TODO: decide wheather this code will help the goal we currently have        
     '''check if how many pairs on grid is connected.if they are connected, add them to constriant
     loop through NeighborUD and NeighborLR
@@ -589,7 +620,7 @@ def example_theory():
     
     #TODO: Connected(p1,p2) if p1 and p2 are connected(constraint)
     '''all possible connection like [E,[E,W]] start pipe at 10 can connect to straight pipe'''
-    possible_connectionsud = []
+    '''possible_connectionsud = []
     for i in PIPE_TYPE:
         for j in i:
             if j == "S":
@@ -611,7 +642,7 @@ def example_theory():
                             c=[i,k]
                             possible_connectionslr.append(c)
     possible_connectionslr.remove([['E'], ['W']])
-    #constraint.add_exactly_one(E, possible_connectionslr)
+    #constraint.add_exactly_one(E, possible_connectionslr)'''
     
     
     '''for one location, there are at least one and at most 4 neighbor'''
