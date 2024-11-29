@@ -517,12 +517,8 @@ def example_theory():
             list_NE.append(p)
         if 'S' in p and 'W' in p:
             list_SW.append(p)
-    '''TODO:use every route in routes to create a constraint that will make sure only these route is valid'''
-    '''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'] and ['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
-    '''#TODO: constraint to make sure the path is valid; use proposition location connecvted to location CL(l1,l2)(constraint)
-    for i in range(len(routes)):
-        for o in range(len(routes[i])-1):#this is to change the path from single one to a pair of location
-            routes[i][o] = [routes[i][o],routes[i][o+1]]'''
+    '''Use every route in routes to create a constraint that will make sure only these route is valid'''
+    #TODO: only add angled constraint if they have a angled pipe at the location in the setup    for r in routes[:6]:  # take the first 6 solution routes
     for r in routes[:6]:  # take the first 6 solution routes
         for i in range(1, len(r) - 1):  # take one connection out of the route and skip the first and last location
             if r[i] in NEIGHBORLR:  # current connection is from left to right and next connection is from left to right
@@ -530,7 +526,7 @@ def example_theory():
                     list_EW_as_constraint = []
                     for p in list_EW:
                         list_EW_as_constraint.append(Location(p, r[i][0]))
-                    if r[i][0] == '12' or r[i][0] == '32':
+                    if (r[i][0] == '12' or r[i][0] == '32') and grid_setup[location_to_index(r[i][0])].pipe in STRAIGHT_PIPE:
                         E.add_constraint(Location(['E','W'], r[i][0]))
             elif r[i] in NEIGHBORUD:  # current connection is from up to down and next connection is from up to down
                 if r[i - 1] in NEIGHBORUD:
@@ -539,7 +535,7 @@ def example_theory():
                         list_NS_as_constraint.append(Location(p, r[i][0]))
                     #(LR) for location 12 and 32 
                     #(UD) for location 21 and 23 #if it is in the solution routes
-                    if r[i][0] == '21' or r[i][0] == '23':
+                    if (r[i][0] == '21' or r[i][0] == '23') and grid_setup[location_to_index(r[i][0])].pipe in STRAIGHT_PIPE:   
                         E.add_constraint(Location(['N','S'], r[i][0]))
                         #TODO: add constraint for connection
             elif r[i] in NEIGHBORUD:  # current connection is from up to down and next connection is from left to right
@@ -547,14 +543,14 @@ def example_theory():
                     list_NE_as_constraint = []
                     for p in list_NE:
                         list_NE_as_constraint.append(Location(p, r[i][0]))
-                    E.add_constraint(Location(['N','E'], r[i][0]))
-                    #TODO: add other angled pipe constraint
+                    if grid_setup(location_to_index(r[i][0])).pipe in ANGLED_PIPE:
+                        E.add_constraint(Location(['N','E'], r[i][0]))
             elif r[i] in NEIGHBORLR:  # current connection is from left to right and next connection is from up to down
                 if r[i - 1] in NEIGHBORUD:
                     list_SW_as_constraint = []
                     for p in list_SW:
                         list_SW_as_constraint.append(Location(p, r[i][0]))
-                    if r[i][0] == '12':
+                    if (r[i][0] == '12'or r[i][0] == '13' or r[i][0] == '23') and grid_setup[location_to_index(r[i][0])].pipe in ANGLED_PIPE:
                         E.add_constraint(Location(['S','W'], r[i][0]))
                     
                 
