@@ -139,6 +139,7 @@ class PipeType(object):
         return f"PipeType({self.pipe})"
     
 '''TODO: what does this do?'''
+#J: does this check for whether or not the pipes are connected?
 @proposition(E)
 class Connected(object):
     def __init__(self, pipe1, pipe2) -> None:
@@ -160,6 +161,15 @@ class Pipe_type_orien_at_Location(object):
         self.pipe = pipe
     def _prop_name(self):
         return f"[{self.type} is a {self.pipe}]"
+
+'''each grid can only be traversed once'''
+@proposition(E)
+class traverse_once(object):
+    def __init__(self, loc) -> None:
+        assert loc in LOCATIONS
+        self.loc = loc
+    def _prop_name(self):
+        return f"[{self.loc} has been traversed]"
 
 '''given two locations are neighbors (they are beside each other)'''
 @proposition(E)
@@ -235,9 +245,10 @@ def setup():
     grid_setup.append(location_propositions[random.randint(1, 10)])
     #this for loop does the same thing as the rest of the code it's easier to read
     #can decide if you want to use the for loop or hard code
-    ''' for i in range(11,82,10):
+    for i in range(11,82,10):
         p = location_propositions[random.randint(i,i+9)]
-        grid_setup.append(p)'''
+        grid_setup.append(p)
+    '''
     p=location_propositions[random.randint(11, 20)]
     grid_setup.append(p)
     p=location_propositions[random.randint(21, 30)]
@@ -253,7 +264,7 @@ def setup():
     p=location_propositions[random.randint(71, 80)]
     grid_setup.append(p)
     p=location_propositions[random.randint(81, 90)]
-    grid_setup.append(p)
+    grid_setup.append(p)'''
     grid_setup.append(location_propositions[len(location_propositions)-1])
 grid_setup = [
     Location(['E'], '10'),
@@ -379,10 +390,12 @@ int_routes = []
 routes = []
 routes = [str(i) for i in routes]
 grid = [[1],[2,4],[1,3,5],[2,6],[1,5,7],[2,4,6,8],[5,3,9],[4,8],[7,5,9],[10,8,6],[]]
+#create a new grid that has one sided connection only
+new_grid = [[1],[2,4],[3,5],[6],[7,5],[8,6],[9],[8],[9],[10],[]]
 src = 0
 dst = 10
 v = 11
-find_paths(grid,src,dst,v,int_routes)
+find_paths(new_grid,src,dst,v,int_routes)
 
 #(f"this is the amount of possible routes:{len(int_routes)}")
 #this is to convert all the values of int routes to string and put them in the routes list
@@ -392,10 +405,12 @@ for i in int_routes:
         temp.append(str(j))
     routes.append(temp)
 '''change the route from ['10','11','21','31','32','33','34'] format to ['10','11'] and ['11',21],['21','31'],['31','32'],['32','33'],['33','34']'''
-#TODO: constraint to make sure the path is valid; use proposition location connecvted to location CL(l1,l2)(constraint)
+
+#TODO: constraint to make sure the path is valid; use proposition location connected to location CL(l1,l2)(constraint)
 for i in range(len(routes)):
     for o in range(len(routes[i])-1):#this is to change the path from single one to a pair of location
         routes[i][o] = [routes[i][o],routes[i][o+1]]
+        #E.add_constraint(Connected())
 
 
 '''
@@ -418,7 +433,7 @@ def example_theory():
             E.add_constraint(Location(['W'], g.location))
         elif g.pipe in THREE_OPENING_PIPE:
             '''constraint to make sure the pipe can be 3 opening pipe with different orientation at the same location'''
-            #3-opening can not be -| shape beside end piece or |-beside start piece
+            #3-opening can not be -| shape beside end piece or |-beside start piece 
             if g.location == '11':
                 E.add_constraint((~Location(['N','S','E'], g.location))&(~TwoPipeConnection(['E'], ['N','S','E'], '10', g.location)))
             elif g.location == '33':
@@ -457,25 +472,36 @@ def example_theory():
     if they are not, then they are not neighbor and can't be connected'''
     for loc1 in LOCATIONS:
         for loc2 in LOCATIONS:
-            if [loc1, loc2] not in NEIGHBORUD and  [loc1, loc2] not in NEIGHBORLR:
+            if [loc1, loc2] in NEIGHBORUD or [loc1, loc2] in NEIGHBORLR:
+                E.add_constraint(Neighbor(loc1, loc2))
+            else:
+                E.add_constraint(~Neighbor(loc1, loc2))
+            """if [loc1, loc2] not in NEIGHBORUD and  [loc1, loc2] not in NEIGHBORLR:
                 E.add_constraint(~Neighbor(loc1, loc2))
             elif [loc1, loc2] in NEIGHBORUD or [loc1, loc2] in NEIGHBORLR:
-                E.add_constraint(Neighbor(loc1, loc2))
+                E.add_constraint(Neighbor(loc1, loc2))"""
     
     #this is to check whether or not two pipes are connected
     #note that one pipe can be connected to multiple pipes
-    for i in range(1,len(grid_setup)):
-        counter = 0
-        for j in range(i+1,len(grid_setup)):
-            if counter>4:
-                counter = 0
-                break
-            if ('E' in grid_setup[i].pipe and 'W' in grid_setup[j].pipe) or ('S' in grid_setup[i].pipe and 'N' in grid_setup[j].pipe):
-                break
-                #print(f"pipe at {grid_setup[i].location} can connect to pipe at {grid_setup[j].location}")
-                #E.add_constraint((Neighbor(grid_setup[i].location,grid_setup[j].location)|Neighbor(grid_setup[j].location,grid_setup[i].location))>>(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location)))
-            counter = counter+1
-    
+    tempconnect = []
+    #print(f"this is grid setup: \n {grid_setup}")
+    for i in range(1,len(grid_setup)-1):
+        pos1 = grid_setup[i]
+        pos2 = grid_setup[i+1]       
+        if(i == 3 or i== 6):
+            continue
+        elif ('E' in pos1.pipe and 'W' in pos2.pipe):
+            tempconnect.append([pos1,pos2])
+            E.add_constraint(Neighbor(pos1.location,pos2.location))
+            #print(f"pipe at {grid_setup[i].location} can connect to pipe at {grid_setup[j].location}")
+            #E.add_constraint((Neighbor(grid_setup[i].location,grid_setup[j].location)|Neighbor(grid_setup[j].location,grid_setup[i].location))>>(TwoPipeConnection(grid_setup[i].pipe,grid_setup[j].pipe,grid_setup[i].location,grid_setup[j].location)))
+    for i in range(1,7):
+        pos1 = grid_setup[i]
+        pos2 = grid_setup[i+3]
+        if('S' in pos1.pipe and 'N' in pos2.pipe):
+            tempconnect.append([pos1,pos2])
+            E.add_constraint(Neighbor(pos1.location,pos2.location))
+            
     '''find a list which contain 'E','W' and a list contain 'N','S' and a list contain 'N','E' and a list contain 'S','W' total of 4 list'''
     list_EW = []
     list_NS = []
@@ -607,7 +633,7 @@ def example_theory():
         all_possible_neighbor.append(possible_neighbor)
     constraint.add_exactly_one(E, all_possible_neighbor)
     print(all_possible_neighbor)'''
-
+    
 
     
     return E
