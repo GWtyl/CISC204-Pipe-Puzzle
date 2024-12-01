@@ -7,10 +7,8 @@ config.sat_backend = "kissat"
 
 # Encoding that will store all of your constraints
 E = Encoding()
-LOCATIONS = []
-'''add location to LOCATIONS using loop from 10 to 34'''
-for i in range(10, 35):
-    LOCATIONS.append(i)
+LOCATIONS = [10, 11, 12, 13, 21, 22, 23, 31, 32, 33, 34]
+
 '''used to generate all possible orentations of a pipe'''
 ORIENTATIONS = list('NSEW')
 
@@ -73,17 +71,54 @@ class Connected(object):
     
 '''given two locations are neighbors (they are beside each other)'''
 @proposition(E)
-class Neighbor(object):
+class NeighborLR(object):
     def __init__(self, loc1, loc2) -> None:
         assert loc1 in LOCATIONS
         assert loc2 in LOCATIONS
-        #assert [loc1,loc2] in NEIGHBORUD or [loc1,loc2] in NEIGHBORLR, f"Invalid connection: {loc1} and {loc2}"
         self.loc1 = loc1
         self.loc2 = loc2
 
     def _prop_name(self):
         return f"[Neighbor({self.loc1}, {self.loc2})]"
+'''given two locations are neighbors (they are on top of each other)'''
+@proposition(E)
+class NeighborUD(object):
+    def __init__(self, loc1, loc2) -> None:
+        assert loc1 in LOCATIONS
+        assert loc2 in LOCATIONS
+        self.loc1 = loc1
+        self.loc2 = loc2
 
+    def _prop_name(self):
+        return f"[NeighborUD({self.loc1}, {self.loc2})]"
+'''the location is occupied(not empty)'''
+@proposition(E)
+class Not_empty(object):
+    def __init__(self, loc) -> None:
+        assert loc in LOCATIONS
+        #assert [loc1,loc2] in NEIGHBORUD or [loc1,loc2] in NEIGHBORLR, f"Invalid connection: {loc1} and {loc2}"
+        self.loc = loc
+
+    def _prop_name(self):
+        return f"[Not_empty({self.loc})]"
+'''Pipe orientation connected down'''
+'''@proposition(E)
+class Pipe_down(object):
+    def __init__(self, pipe) -> None:
+        assert pipe in PIPE_ORIENTATIONS
+        self.pipe = pipe
+
+    def _prop_name(self):
+        return f"[Pipe_connect_down({self.pipe})]"'''
+'''Pipe orientation connected right'''
+'''@proposition(E)
+class Pipe_right(object):
+    def __init__(self, pipe) -> None:
+        assert pipe in PIPE_ORIENTATIONS
+        self.pipe = pipe
+
+    def _prop_name(self):
+        return f"[Pipe_connect_right({self.pipe})]"'''
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
 # for propositions within that class. For example, you can enforce that "at least one" of the propositions
 # that are instances of this class must be true by using a @constraint decorator.
@@ -98,10 +133,25 @@ class FancyPropositions:
 
     def _prop_name(self):
         return f"A.{self.data}"
+'''test case'''
+#have one solution
+grid_setup = [
+    Location(['E'], 10),
+    Location(['N', 'W'], 11),
+    Location(['S', 'E'], 12),
+    Location(['N', 'E'], 13),
+    Location(['E', 'W'], 21),
+    Location(['S', 'E'], 22),
+    Location(['N', 'E', 'W'], 23),
+    Location(['N', 'S', 'E'], 31),
+    Location(['N', 'S', 'E'], 32),
+    Location(['N', 'S', 'E'], 33),
+    Location(['W'], 34)
+]
 
 # Call your variables whatever you want
-a = Location(['E'], '10')
-b = Location(['W'], '34')
+a = Location(['E'], 10)
+b = Location(['W'], 34)
 #c = Neighbor("c")
 #d = BasicPropositions("d")
 #e = BasicPropositions("e")
@@ -109,21 +159,6 @@ b = Location(['W'], '34')
 x = FancyPropositions("x")
 y = FancyPropositions("y")
 z = FancyPropositions("z")
-'''test case'''
-#have one solution
-grid_setup = [
-    Location(['E'], '10'),
-    Location(['N', 'W'], '11'),
-    Location(['S', 'E'], '12'),
-    Location(['N', 'E'], '13'),
-    Location(['E', 'W'], '21'),
-    Location(['S', 'E'], '22'),
-    Location(['N', 'E', 'W'], '23'),
-    Location(['N', 'S', 'E'], '31'),
-    Location(['N', 'S', 'E'], '32'),
-    Location(['N', 'S', 'E'], '33'),
-    Location(['W'], '34')
-]
 
 def example_theory():
     '''You should have some propositions representing if two squares are connected, 
@@ -144,12 +179,47 @@ def example_theory():
     # You can also add more customized "fancy" constraints. Use case: you don't want to enforce "exactly one"
     # for every instance of BasicPropositions, but you want to enforce it for a, b, and c.:
     constraint.add_exactly_one(E, a, b, c)'''
-    #TODO: every location must have one pipe
-    #TODO: to be neighbor, only 10 or 1 difference in location
+
+    '''check what location have pipe'''
+    for l in LOCATIONS:
+        for g in grid_setup:
+            if g.location == l:
+                E.add_constraint(Not_empty(l))
+    NB = []
+    '''first row neighbour'''#[10(0), 11(1), 12(2), 13(3), 21(4), 22(5), 23(6), 31(7), 32(8), 33(9), 34(10)]
+    for l1 in LOCATIONS[:3]:#[10(0), 11(1), 12(2)]
+        NB.append(NeighborLR(l1, l1 + 1))
+    '''second row neighbour'''
+    for l1 in LOCATIONS[4:6]:#[21, 22]
+        NB.append(NeighborLR(l1, l1 + 1))
+    '''third row neighbour'''
+    for l1 in LOCATIONS[7:9]:#[31, 32]
+        NB.append(NeighborLR(l1, l1 + 1))
+    '''first column neighbour'''
+    for l1 in LOCATIONS[1:4]:#[11, 12, 13]        
+        NB.append(NeighborUD(l1, l1 + 10))
+    '''second column neighbour'''
+    for l1 in LOCATIONS[4:6]:#[21, 22, 23]
+        NB.append(NeighborUD(l1, l1 + 10))
+    E.add_constraint(And(NB))
+    '''everthing else is not neighbour and since they are not neighbour, they are not connected'''
+    for l1 in LOCATIONS:
+        for l2 in LOCATIONS:
+            if NeighborUD(l1, l2) not in NB and NeighborLR(l1, l2) not in NB:
+                E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
+                E.add_constraint(~Connected(l1, l2))
+
     #TODO: To be connected, iff the pipe's opeing need to be facing each other and they are neighbours
     #NB(l1,l2)&'E'in Location(pipe,l1).pipe&'W' in Location(pipe,l1).pipe>>connected(l1,l2)
     #if NE on grid, check the other orientation of the same pipe
+    for g1 in grid_setup:#Location(pipe,l1)
+        for g2 in grid_setup:
+            if ('E' in g1.pipe) and ('W' in g2.pipe):
+                E.add_constraint((Not_empty(g1.location)&Not_empty(g2.location)&NeighborLR(g1.location,g2.location))>>Connected(g1.location,g2.location))
+            if ('S' in g1.pipe) and ('N' in g2.pipe):
+                E.add_constraint((Not_empty(g1.location)&Not_empty(g2.location)&NeighborUD(g1.location,g2.location))>>Connected(g1.location,g2.location))
     #TODO: connected from 10 to 34 to be able to win: route 1 is (connected(start, a_1) ∧ connected(a_1,a_2) ∧ ... ∧ connected(a_n, end))
+    
     #TODO: r1 or r2 or r3 or r4 or r5 or r6 using for loop to generate all possible routes
     #TODO:after rotating, mark it as visited/ check the connection before and after to make sure the rest is connected and the presvious has not changed
     #TODO: how to make sure it only connect to right and down
@@ -167,14 +237,19 @@ def example_theory():
 def display_solution(S, want=False):
     true_props = set()
     for k in S:
-        if S[k] and (not want or '@' in str(k)):
-            true_props.add(str(k)+' is '+str(S[k]))
+        if S[k] and (not want or 'Connected' in str(k)):
+            true_props.add(str(k))
     print("\n".join(true_props))
 if __name__ == "__main__":
+    #[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
     T = example_theory()
     # Don't compile until you're finished adding all your constraints!
     T = T.compile()
-    #display_solution(T, True)
+    S = T.solve()
+    if S:
+        display_solution(S, True)
+    else:
+        print("No solution!!")
     # After compilation (and only after), you can check some of the properties
     # of your model:
     '''print("\nSatisfiable: %s" % T.satisfiable())
