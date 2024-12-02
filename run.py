@@ -9,7 +9,7 @@ import random
 E = Encoding()
 LOCATIONS = [10, 11, 12, 13, 21, 22, 23, 31, 32, 33, 34]
 NB = []
-can_be_connected_pipe = []
+connection = {}
 '''LOCATION_xy= []
 def setup_grid_location(x,y):#x is row, y is column#x:3, y:3
     assert x < 4 and y < 4
@@ -123,6 +123,25 @@ class Pipe_ConnectUD(object):
     def _prop_name(self):
         return f"[Pipe_ConnectUD({self.pipe1}, {self.pipe2})]"
 '''given two locations are neighbors (they are beside each other)'''
+
+'''given two locations are beside eachother, they are neighbors'''
+class Neighbor(object):
+    def __init__(self, loc1, loc2) -> None:
+        assert loc1 in LOCATIONS
+        assert loc2 in LOCATIONS
+        self.loc1 = loc1
+        self.loc2 = loc2
+    def _prop_name(self):
+        return f"Neighbors {self.loc1}, {self.loc2}"
+    
+'''whether or not the grid has a solution'''
+class Solution(object):
+    def __init__(self,condition) -> None:
+        assert condition
+        self.condition = condition
+    def _prop_name(self):
+        return f"Solution:{self.condition}"
+    
 @proposition(E)
 class NeighborLR(object):
     def __init__(self, loc1, loc2) -> None:
@@ -188,7 +207,7 @@ class FancyPropositions:
         return f"A.{self.data}"
 '''test case'''
 #have one solution
-grid_setup = [
+'''grid_setup = [
     Location(['E'], 10),
     Location(['N', 'W'], 11),
     Location(['S', 'E'], 12),
@@ -200,8 +219,36 @@ grid_setup = [
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)
-]
+]'''
 
+#grid has actual solution
+grid_setup = [
+    Location(['E'], 10),
+    Location(['S','W'],11),
+    Location(['S', 'E'], 12),
+    Location(['N', 'E'], 13),
+    Location(['N', 'E'], 21),
+    Location(['E','W'], 22),
+    Location(['S','W'],23),
+    Location(['N', 'S', 'E'], 31),
+    Location(['N', 'S', 'E'], 32),
+    Location(['N', 'S', 'E'], 33),
+    Location(['W'], 34)
+]
+#grid have multiple routes
+# grid_setup = [
+#     Location(['E'], 10),
+#     Location(['S', 'E', 'W'],11),
+#     Location(['S', 'W'], 12),
+#     Location(['N', 'E'], 13),
+#     Location(['N', 'E'], 21),
+#     Location(['N','E','W'], 22),
+#     Location(['S','W'],23),
+#     Location(['N', 'S', 'E'], 31),
+#     Location(['N', 'S', 'E'], 32),
+#     Location(['N', 'S','E'], 33),
+#     Location(['W'], 34)
+# ]
 # Call your variables whatever you want
 a = Location(['E'], 10)
 b = Location(['W'], 34)
@@ -214,6 +261,7 @@ y = FancyPropositions("y")
 z = FancyPropositions("z")
 
 def example_theory():
+    #print(PIPE_ORIENTATIONS)
     '''You should have some propositions representing if two squares are connected, 
     i.e. connected((x_1,y_1),(x_2,y_2)), or connected(a,b), depending on how you want to implement it. 
     Then, the condition for a solution being found is if there is a chain of "Trues" from the start to the end. 
@@ -222,47 +270,8 @@ def example_theory():
     checking this won't be too hard. You just need to write some code that checks all possible values of n to see if there is a path. 
     (For a 3x3 grid, n would be no larger than 9, for example, since if it was you would be doubling back on yourself; 
     in fact it's lower if you're only going down and to the right). '''
-    #TODO: how to prevent the pipe from leads to outside of the grid
-    E.add_constraint(~Pipe_ConnectLR(['E'], ['W']))
-    #add can_be_connected pipe
-    for p in PIPE_ORIENTATIONS:
-        for q in PIPE_ORIENTATIONS:
-            if 'E' in p and 'W' in q:
-                can_be_connected_pipe.append(Pipe_ConnectLR(p, q))
-            elif 'N' in p and 'S' in q:
-                can_be_connected_pipe.append(Pipe_ConnectUD(p, q))
-    '''for p in can_be_connected_pipe:
-        print(p)'''
-    #E.add_constraint(And(can_be_connected_pipe))
-    for p in PIPE_ORIENTATIONS:
-        for q in PIPE_ORIENTATIONS:
-            if Pipe_ConnectLR(p, q) not in can_be_connected_pipe and Pipe_ConnectUD(p, q) not in can_be_connected_pipe:
-                E.add_constraint(~Pipe_ConnectLR(p, q))
-                E.add_constraint(~Pipe_ConnectUD(p, q))
-    '''must have E at a location 10 and W at location 34'''
-    E.add_constraint(a)
-    E.add_constraint(b)
-    '''start and end can not be connected directly'''
-    E.add_constraint(~Connected(10, 34))
-    for p in STRAIGHT_PIPE:
-        E.add_constraint(Straight_Pipe(p))
-    for p in ANGLED_PIPE:
-        E.add_constraint(Angled_Pipe(p))
-    for p in THREE_OPENING_PIPE:
-        E.add_constraint(Three_Opening_Pipe(p))
-
-    for g in grid_setup:
-        if g.pipe in STRAIGHT_PIPE:
-            E.add_constraint(Straight_Pipe(g.pipe)>>(Location(['N', 'S'], g.location)|Location(['E', 'W'], g.location)))
-        if g.pipe in ANGLED_PIPE:
-            E.add_constraint(Angled_Pipe(g.pipe)>>(Location(['N', 'W'], g.location)|Location(['N', 'E'], g.location)|Location(['S', 'E'], g.location)|Location(['S', 'W'], g.location)))
-        if g.pipe in THREE_OPENING_PIPE:
-            E.add_constraint(Three_Opening_Pipe(g.pipe)>>(Location(['N', 'S', 'E'], g.location)|Location(['N', 'S', 'W'], g.location)|Location(['N', 'E', 'W'], g.location)|Location(['S', 'E', 'W'], g.location)))
-    '''check what location have pipe'''
-    for l in LOCATIONS:
-        for g in grid_setup:
-            if g.location == l:
-                E.add_constraint(Not_empty(l))
+    
+    #find all neighbours
     '''first row neighbour'''#[10(0), 11(1), 12(2), 13(3), 21(4), 22(5), 23(6), 31(7), 32(8), 33(9), 34(10)]
     for l1 in LOCATIONS[:3]:#[10(0), 11(1), 12(2)]
         NB.append(NeighborLR(l1, l1 + 1))
@@ -285,49 +294,46 @@ def example_theory():
             if NeighborUD(l1, l2) not in NB and NeighborLR(l1, l2) not in NB:
                 E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
                 E.add_constraint(~Connected(l1, l2))
-
-    #TODO: To be connected, iff the pipe's opeing need to be facing each other and they are neighbours
-    #NB(l1,l2)&'E'in Location(pipe,l1).pipe&'W' in Location(pipe,l1).pipe>>connected(l1,l2)
-    #if NE on grid, check the other orientation of the same pipe
-    for g1 in grid_setup:#Location(pipe,l1)
-        for g2 in grid_setup:
-                E.add_constraint((Not_empty(g1.location)&Not_empty(g2.location)&NeighborLR(g1.location,g2.location)&Pipe_ConnectLR(g1.pipe,g2.pipe))>>Connected(g1.location,g2.location))
-                E.add_constraint((Not_empty(g1.location)&Not_empty(g2.location)&NeighborUD(g1.location,g2.location)&Pipe_ConnectUD(g1.pipe,g2.pipe))>>Connected(g1.location,g2.location))
-    #TODO: connected from 10 to 34 to be able to win: route 1 is (connected(start, a_1) ∧ connected(a_1,a_2) ∧ ... ∧ connected(a_n, end))
-    '''this out put[Connected(10, 11), Connected(11, 12), Connected(12, 13), Connected(13, 23), Connected(21, 22), Connected(22, 23), Connected(23, 33), Connected(31, 32), Connected(32, 33), Connected(33, 34)]
-    [Connected(11, 21), Connected(12, 22), Connected(21, 31), Connected(22, 32)]'''
-    '''possible_route=[]
-    for i in range(len(LOCATIONS)):#[10, 11, 12, 13, 21, 22, 23, 31, 32, 33, 34]
-        for j in range(i+1,len(LOCATIONS)):#[11, 12, 13, 21, 22, 23, 31, 32, 33, 34]
-            if (NeighborLR(LOCATIONS[i], LOCATIONS[j]) in NB or NeighborUD(LOCATIONS[i], LOCATIONS[j]) in NB)and (Connected(LOCATIONS[i], LOCATIONS[j]) not in possible_route):
-                possible_route.append(Connected(LOCATIONS[i], LOCATIONS[j]))
-    #print(possible_route)'''
-    #TODO: make SAT solver to find the route
-    def find_routes(start, end, path=[]):
-        path = path + [start]
-        if start == end:
-            return [path]
-        routes = []
-        for loc in LOCATIONS:
-            if loc not in path:
-                if NeighborLR(start, loc) in NB or NeighborUD(start, loc) in NB:
-                    new_routes = find_routes(loc, end, path)
-                    for new_route in new_routes:
-                        routes.append(new_route)
-        return routes
-
-    routes = find_routes(10, 34)
-    route_constraints = []
-    for route in routes:
-        route_constraint = And([Connected(route[i], route[i+1]) for i in range(len(route)-1)])
-        route_constraints.append(route_constraint)
-
-    E.add_constraint(Or(route_constraints))
-    '''E.add_constraint((Connected(10, 11)&Connected(11, 21)&Connected(21, 31)&Connected(31, 32)&Connected(32, 33)&Connected(33, 34))|
-                     (Connected(10, 11)&Connected(11, 12)&Connected(12, 13)&Connected(13, 23)&Connected(23, 33)&Connected(33, 34))|
-                     (Connected(10, 11)&Connected(11, 12)&Connected(12, 22)&Connected(22, 32)&Connected(32, 33)&Connected(33, 34))|
-                    (Connected(10, 11)&Connected(11, 21)&Connected(21, 22)&Connected(22, 32)&Connected(32, 33)&Connected(33, 34)))'''
-
+    E.add_constraint(~Connected(10, 34)) #10 and 34 can't connect directly
+    #solution 1: the pipes cannot spin. Find a solution that way.
+    #first find all the connections
+    for i in range(len(grid_setup)-1):
+        if i == 3 or i == 6:
+            continue
+        elif 'E' in grid_setup[i].pipe and 'W' in grid_setup[i+1].pipe:
+            key =str(grid_setup[i].location)+str(grid_setup[i+1].location)
+            connection[int(key)] = Connected(grid_setup[i].location,grid_setup[i+1].location)
+        
+    for i in range(1,7):
+        if 'S' in grid_setup[i].pipe and 'N' in grid_setup[i+3].pipe:
+            key =str(grid_setup[i].location)+str(grid_setup[i+3].location)
+            connection[int(key)] = Connected(grid_setup[i].location, grid_setup[i+3].location)
+    
+    print(connection)
+    sol = []
+    curval = '10'
+    counter = 0
+    tempcon = connection
+    #find a path that leads from 10 to 34
+    #this loops over the dictionary that contains all the connected tiles
+    #adds the connected to a list if there is a route
+    while curval != '34':
+        counter = counter+1
+        counter2 = 0
+        for j in connection:
+            counter2 = counter2+1
+            if curval in str(j)[:2]: #check if it's a connecting grid
+                sol.append(connection[j])
+                curval = str(j)[2:]
+                connection.pop(j) #remove it from the list so it doesn't infinitely pause on the same location
+                break
+            elif counter2 == len(connection): #if it runs into a dead end then remove the connection
+                connection = tempcon
+        if counter == 100: break #there's probably no solution if looped 100 times
+    #print(f"this is sol{sol}")
+    E.add_constraint(And(sol))
+    #print(f"this is the current value of curval: {curval}")
+    
     #find all possible routes between 10 to 34 and add them to the list but thee location should be consistent with the grid like after Conncted[10,11] should be [11,12] or [11,21]
 
 
@@ -354,8 +360,10 @@ if __name__ == "__main__":
     # Don't compile until you're finished adding all your constraints!
     T = T.compile()
     S = T.solve()
+    #print(f"what does S do?: \n{S}")
     if S:
         display_solution(S, True)
+        print("there's a solution")
     else:
         print("No solution!!")
     # After compilation (and only after), you can check some of the properties
