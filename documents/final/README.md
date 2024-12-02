@@ -1,9 +1,12 @@
-# Modelling Project Final Submission
+# CISC/CMPE 204 Modelling Project for group 6: Pipe Puzzle
 
-This folder should contain the extra documents for the deliverables (D3) - (D5)
+This is a game about connecting pipes in a 3x3 grid where the start is at top-left corner and end at bottom right corner and they are outside the 3x3 grid. The goal of this game is to connect the starting pipe, ending pipe, and every pipe in between them by rotating the pipes on the grid. 
+There are a simple graph we put up to have a better understading of how the whole grid will look like
 
-## Expected Items
-
-* *this repository*: We will download the most recent version of your project (including this folder) on the due date.
-* `proofs.jp`: Jape file containing sequents, as well as their proofs.
-* `modelling_report.docx` or (`report.txt` and `report.pdf`): Include either the Word document for your documentation, or a link to the OverLeaf project inside of `report.txt` if that is what you chose to use for (D5). If you are using OverLeaf, include a compiled version here as `report.pdf`.
+#TODO:
+and provide pointers to the general structure of the repository. How you organize and build things (which files, how you structure things, etc) is entirely up to you! 
+## Structure
+* `documents/final/modelling_report_final.docx`: This will be the documentation we have for the project
+* `run.py`: This file contains all the implementation including proposition, constriant, model exploration
+#TODO:
+* `test.py`: Run this file to confirm that your submission has everything required. This essentially just means it will check for the right files and sufficient theory size.
