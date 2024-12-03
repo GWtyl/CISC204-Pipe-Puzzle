@@ -283,7 +283,6 @@ def example_theory():
     
     
     '''enforce only one pipe per location but can have different orientations'''
-    
     for g in grid_setup:
         location=[]
         #enfore pipe orientation at 11 and 33
@@ -298,21 +297,21 @@ def example_theory():
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
         elif len(g.pipe) == 2 and g.pipe in STRAIGHT_PIPE:
-            if g.location == 11 or g.location == 33:
+            if g.location == 11 or g.location == 33:#only connect Left to right beside start piece and end piece
                 E.add_constraint(~Location(['N', 'S'], 11))
             for p in STRAIGHT_PIPE:
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
         elif len(g.pipe) == 2 and g.pipe in ANGLED_PIPE:
-            if g.location == 11:
+            if g.location == 11:#if there is angled pipe at 11, it must oriented Left to Down
                 E.add_constraint(~Location(['N', 'W'], 11))
                 E.add_constraint(~Location(['N', 'E'], 11))
                 E.add_constraint(~Location(['S', 'E'], 11))
-            if g.location == 33:
+            if g.location == 33:#if there is angled pipe at 11, it must oriented Up to right
                 E.add_constraint(~Location(['N', 'W'], 33))
                 E.add_constraint(~Location(['S', 'W'], 33))
                 E.add_constraint(~Location(['S', 'E'], 33))
-            for p in ANGLED_PIPE:
+            for p in ANGLED_PIPE:#enforce 4 oreintation
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
         for l in location:
@@ -350,46 +349,8 @@ def example_theory():
                 E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
                 E.add_constraint(~Connected(l1, l2))
     E.add_constraint(~Connected(10, 34)) #10 and 34 can't connect directly
-    '''#solution 1: the pipes cannot spin. Find a solution that way.
-    #first find all the connections
-    for i in range(len(grid_setup)-1):
-        if i == 3 or i == 6:
-            continue
-        elif 'E' in grid_setup[i].pipe and 'W' in grid_setup[i+1].pipe:
-            key =str(grid_setup[i].location)+str(grid_setup[i+1].location)
-            connection[int(key)] = Connected(grid_setup[i].location,grid_setup[i+1].location)
-        
-    for i in range(1,7):
-        if 'S' in grid_setup[i].pipe and 'N' in grid_setup[i+3].pipe:
-            key =str(grid_setup[i].location)+str(grid_setup[i+3].location)
-            connection[int(key)] = Connected(grid_setup[i].location, grid_setup[i+3].location)
     
-    print(connection)
-    sol = []
-    curval = '10'
-    counter = 0
-    tempcon = connection
-    #find a path that leads from 10 to 34
-    #this loops over the dictionary that contains all the connected tiles
-    #adds the connected to a list if there is a route
-    while curval != '34':
-        counter = counter+1
-        counter2 = 0
-        for j in connection:
-            counter2 = counter2+1
-            if curval in str(j)[:2]: #check if it's a connecting grid
-                sol.append(connection[j])
-                curval = str(j)[2:]
-                connection.pop(j) #remove it from the list so it doesn't infinitely pause on the same location
-                break
-            elif counter2 == len(connection): #if it runs into a dead end then remove the connection
-                connection = tempcon
-        if counter == 100: break #there's probably no solution if looped 100 times
-    #print(f"this is sol{sol}")
-    E.add_constraint(And(sol))
-    #print(f"this is the current value of curval: {curval}")'''
-    
-    # #enforce one route from 10 to 34 to be true: Conncted(10,11)
+    #test case #enforce one route from 10 to 34 to be true: Conncted(10,11)
     l=[Connected(10,11),Connected(11,21),Connected(21,31),Connected(31,32),Connected(32,33),Connected(33,34)]
     E.add_constraint(And(l))
     #TODO: generate all possible routes between 10 and 34
@@ -401,14 +362,6 @@ def example_theory():
                 E.add_constraint((NeighborUD(l1, l2) & Have_north(l1) & Have_south(l2))>>Connected(l1, l2))
                 E.add_constraint(Connected(l1, l2)>>(NeighborLR(l1, l2) & Have_east(l1) & Have_west(l2)))
                 E.add_constraint(Connected(l1, l2)>>(NeighborUD(l1, l2) & Have_north(l1) & Have_south(l2)))
-    #enfore straight and three opening at 11
-    #constraint.add_exactly_one(E, Location(['E'], 10)&Location(['S', 'W'], 11), Location(['E'], 10)&Location(['E', 'W'], 11), Location(['E'], 10)&Location(['N', 'E', 'W'],11), Location(['E'], 10)&Location(['S', 'E', 'W'],11))
-    
-    
-    #constraint.add_exactly_one(E, Location(['E'], 10)&Location(['S', 'W'], 11), Location(['E'], 10)&Location(['E', 'W'], 11), Location(['E'], 10)&Location(['N', 'E', 'W'],11), Location(['E'], 10)&Location(['S', 'E', 'W'],11))
-    # #enforce one route from 10 to 34 to be true: Conncted(10,11)
-    l=[Connected(10,11),Connected(11,21),Connected(21,31),Connected(31,32),Connected(32,33),Connected(33,34)]
-    E.add_constraint(And(l))
     return E
 
 def display_solution(S, want=False):
