@@ -289,7 +289,7 @@ def example_theory():
         #enfore pipe orientation at 11 and 33
         if len(g.pipe) == 3:#enforce only 4 orientations
             #TODO: how we can make sure that the pipe is set to a certain orientation where it has a solution?
-            #if we want only 1 orientation then we need to know what is the pipe before in the grid
+            #do we do a trial and run and see which orientation has a solution and then keep it?but I am not sure how to accomplish that using constraints
             if g.location == 11:
                 E.add_constraint(~Location(['N', 'S', 'E'], 11))
             if g.location == 33:
