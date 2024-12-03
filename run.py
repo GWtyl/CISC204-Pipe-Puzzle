@@ -38,14 +38,21 @@ for i in range(0, len(ORIENTATIONS)):#3 opening pipe
             p=[orien1, orien2, orien3]
             PIPE_ORIENTATIONS.append(p)
 
-#TODO: may need to delete
 '''possible pipe orientation for STRAIGHT piece'''
-STRAIGHT_PIPE = [['N', 'S'], ['E', 'W']]
+STRAIGHT_PIPE = []#[['N', 'S'], ['E', 'W']]
 '''possible pipe orientation for ANGLED piece'''
-ANGLED_PIPE = [['N', 'W'], ['N', 'E'], ['S', 'E'], ['S', 'W']]
+ANGLED_PIPE = []#[['N', 'W'], ['N', 'E'], ['S', 'E'], ['S', 'W']]
 '''possible pipe orientation for THREE_OPENING piece'''
-THREE_OPENING_PIPE = [['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
-
+THREE_OPENING_PIPE = []#[['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
+'''initialize orientations for each type of pipe'''
+for p in PIPE_ORIENTATIONS:
+    if len(p) == 2:
+        if ('N' in p and 'S' in p) or ('E' in p and 'W' in p):
+            STRAIGHT_PIPE.append(p)
+        else:
+            ANGLED_PIPE.append(p)
+    elif len(p) == 3:
+        THREE_OPENING_PIPE.append(p)
 # a visual representation of one grid cell
 '''
      N
@@ -54,30 +61,7 @@ THREE_OPENING_PIPE = [['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', '
    +----+
      S   
 '''
-'''the type of pipe(straight, angled, three_opening) can opens to these orientations'''
-#TODO:may not use this; may need to delete
-@proposition(E)
-class Straight_Pipe(object): 
-    def __init__(self, pipe_specific) -> None:
-        assert pipe_specific in STRAIGHT_PIPE
-        self.pipe_specific = pipe_specific
-    def _prop_name(self):
-        return f"(opens {self.pipe_specific})"
-@proposition(E)
-class Angled_Pipe(object): 
-    def __init__(self, pipe_specific) -> None:
-        assert pipe_specific in ANGLED_PIPE
-        self.pipe_specific = pipe_specific
-    def _prop_name(self):
-        return f"(opens{self.pipe_specific})"
 
-@proposition(E)
-class Three_Opening_Pipe(object): 
-    def __init__(self,pipe_specific) -> None:
-        assert pipe_specific in THREE_OPENING_PIPE
-        self.pipe_specific = pipe_specific
-    def _prop_name(self):
-        return f"(opens {self.pipe_specific})"
 '''given pipe is at given location; this works for the setup'''
 @proposition(E)
 class Location(object): 
@@ -100,40 +84,44 @@ class Connected(object):
 
     def _prop_name(self):
         return f"Connected({self.l1}, {self.l2})"
-'''pipe are connected to each other left to right'''
+
+'''a grid cell can be conncted to east'''
 @proposition(E)
-class Pipe_ConnectLR(object):
-    def __init__(self, pipe1, pipe2) -> None:
-        assert pipe1 in PIPE_ORIENTATIONS
-        assert pipe2 in PIPE_ORIENTATIONS
-        self.pipe1 = pipe1
-        self.pipe2 = pipe2
+class Have_east(object):
+    def __init__(self, loc) -> None:
+        assert loc in LOCATIONS
+        self.loc = loc
 
     def _prop_name(self):
-        return f"[Pipe_ConnectLR({self.pipe1}, {self.pipe2})]"  
-'''pipe are connected to each other up and down'''
+        return f"Connectable({self.loc})"  
+'''a grid cell can be conncted to south'''
 @proposition(E)
-class Pipe_ConnectUD(object):
-    def __init__(self, pipe1, pipe2) -> None:
-        assert pipe1 in PIPE_ORIENTATIONS
-        assert pipe2 in PIPE_ORIENTATIONS
-        self.pipe1 = pipe1
-        self.pipe2 = pipe2
+class Have_south(object):
+    def __init__(self, loc) -> None:
+        assert loc in LOCATIONS
+        self.loc = loc
 
     def _prop_name(self):
-        return f"[Pipe_ConnectUD({self.pipe1}, {self.pipe2})]"
-'''given two locations are neighbors (they are beside each other)'''
+        return f"Connectable({self.loc})"
+'''a grid cell can be conncted to west'''
+@proposition(E)
+class Have_west(object):
+    def __init__(self, loc) -> None:
+        assert loc in LOCATIONS
+        self.loc = loc
 
-'''given two locations are beside eachother, they are neighbors'''
-class Neighbor(object):
-    def __init__(self, loc1, loc2) -> None:
-        assert loc1 in LOCATIONS
-        assert loc2 in LOCATIONS
-        self.loc1 = loc1
-        self.loc2 = loc2
     def _prop_name(self):
-        return f"Neighbors {self.loc1}, {self.loc2}"
-    
+        return f"Connectable({self.loc})"
+'''a grid cell can be conncted to north'''
+@proposition(E)
+class Have_north(object):
+    def __init__(self, loc) -> None:
+        assert loc in LOCATIONS
+        self.loc = loc
+
+    def _prop_name(self):
+        return f"Connectable({self.loc})"
+
 '''whether or not the grid has a solution'''
 class Solution(object):
     def __init__(self,condition) -> None:
@@ -168,29 +156,11 @@ class NeighborUD(object):
 class Not_empty(object):
     def __init__(self, loc) -> None:
         assert loc in LOCATIONS
-        #assert [loc1,loc2] in NEIGHBORUD or [loc1,loc2] in NEIGHBORLR, f"Invalid connection: {loc1} and {loc2}"
         self.loc = loc
 
     def _prop_name(self):
         return f"[Not_empty({self.loc})]"
-'''Pipe orientation connected down'''
-'''@proposition(E)
-class Pipe_down(object):
-    def __init__(self, pipe) -> None:
-        assert pipe in PIPE_ORIENTATIONS
-        self.pipe = pipe
 
-    def _prop_name(self):
-        return f"[Pipe_connect_down({self.pipe})]"'''
-'''Pipe orientation connected right'''
-'''@proposition(E)
-class Pipe_right(object):
-    def __init__(self, pipe) -> None:
-        assert pipe in PIPE_ORIENTATIONS
-        self.pipe = pipe
-
-    def _prop_name(self):
-        return f"[Pipe_connect_right({self.pipe})]"'''
 # Different classes for propositions are useful because this allows for more dynamic constraint creation
 # for propositions within that class. For example, you can enforce that "at least one" of the propositions
 # that are instances of this class must be true by using a @constraint decorator.
@@ -207,7 +177,7 @@ class FancyPropositions:
         return f"A.{self.data}"
 '''test case'''
 #have one solution
-'''grid_setup = [
+grid_setup = [
     Location(['E'], 10),
     Location(['N', 'W'], 11),
     Location(['S', 'E'], 12),
@@ -219,9 +189,9 @@ class FancyPropositions:
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)
-]'''
+]
 
-#grid has actual solution
+'''#grid has actual solution
 grid_setup = [
     Location(['E'], 10),
     Location(['S','W'],11),
@@ -234,7 +204,7 @@ grid_setup = [
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)
-]
+]'''
 #grid have multiple routes
 # grid_setup = [
 #     Location(['E'], 10),
@@ -270,7 +240,35 @@ def example_theory():
     checking this won't be too hard. You just need to write some code that checks all possible values of n to see if there is a path. 
     (For a 3x3 grid, n would be no larger than 9, for example, since if it was you would be doubling back on yourself; 
     in fact it's lower if you're only going down and to the right). '''
+    E.add_constraint(Location(['E'], 10))
+    E.add_constraint(Location(['W'], 34))
+
+    '''enforce only one pipe per location but can have different orientations'''
     
+    for g in grid_setup:
+        location=[]
+        if len(g.pipe) == 3:#enforce only 4 orientations
+            for p in THREE_OPENING_PIPE:
+                location.append(Location(p, g.location))
+            constraint.add_exactly_one(E, *location)
+        elif len(g.pipe) == 2 and g.pipe in STRAIGHT_PIPE:
+            for p in STRAIGHT_PIPE:
+                location.append(Location(p, g.location))
+            constraint.add_exactly_one(E, *location)
+        elif len(g.pipe) == 2 and g.pipe in ANGLED_PIPE:
+            for p in ANGLED_PIPE:
+                location.append(Location(p, g.location))
+            constraint.add_exactly_one(E, *location)
+        for o in g.pipe:
+            if o == 'N':
+                E.add_constraint(Have_north(g.location))
+            elif o == 'S':
+                E.add_constraint(Have_south(g.location))
+            elif o == 'E':
+                E.add_constraint(Have_east(g.location))
+            elif o == 'W':
+                E.add_constraint(Have_west(g.location))
+
     #find all neighbours
     '''first row neighbour'''#[10(0), 11(1), 12(2), 13(3), 21(4), 22(5), 23(6), 31(7), 32(8), 33(9), 34(10)]
     for l1 in LOCATIONS[:3]:#[10(0), 11(1), 12(2)]
@@ -295,7 +293,7 @@ def example_theory():
                 E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
                 E.add_constraint(~Connected(l1, l2))
     E.add_constraint(~Connected(10, 34)) #10 and 34 can't connect directly
-    #solution 1: the pipes cannot spin. Find a solution that way.
+    '''#solution 1: the pipes cannot spin. Find a solution that way.
     #first find all the connections
     for i in range(len(grid_setup)-1):
         if i == 3 or i == 6:
@@ -332,32 +330,31 @@ def example_theory():
         if counter == 100: break #there's probably no solution if looped 100 times
     #print(f"this is sol{sol}")
     E.add_constraint(And(sol))
-    #print(f"this is the current value of curval: {curval}")
+    #print(f"this is the current value of curval: {curval}")'''
+    # #enforce one route from 10 to 34 to be true: Conncted(10,11)
+    l=[Connected(10,11),Connected(11,21),Connected(21,31),Connected(31,32),Connected(32,33),Connected(33,34)]
+    E.add_constraint(And(l))
+    #TODO: generate all possible routes between 10 and 34
+    '''check if any of the two locations are connected by seeing if they are neighbors and have the connectable orientation'''
+    for l1 in LOCATIONS:
+        for l2 in LOCATIONS:
+            if l1 != l2:
+                E.add_constraint(Connected(l1, l2)>>(NeighborLR(l1, l2) & Have_east(l1) & Have_west(l2)))
+                E.add_constraint(Connected(l1, l2)>>(NeighborUD(l1, l2) & Have_north(l1) & Have_south(l2)))
+    #enfore straight and three opening at 11
+    constraint.add_exactly_one(E, Location(['E'], 10)&Location(['S', 'W'], 11), Location(['E'], 10)&Location(['E', 'W'], 11), Location(['E'], 10)&Location(['N', 'E', 'W'],11), Location(['E'], 10)&Location(['S', 'E', 'W'],11))
     
-    #find all possible routes between 10 to 34 and add them to the list but thee location should be consistent with the grid like after Conncted[10,11] should be [11,12] or [11,21]
-
-
-
-
-    #TODO: r1 or r2 or r3 or r4 or r5 or r6 using for loop to generate all possible routes
-    #TODO:?after rotating, mark it as visited/ check the connection before and after to make sure the rest is connected and the presvious has not changed
-    #TODO: how to make sure it only connect to right and down
-    
-
-
-
     return E
 
 def display_solution(S, want=False):
     true_props = set()
     for k in S:
-        if S[k] and (not want or 'Connected' in str(k)):
+        if S[k] and (not want or '@' in str(k)):
             true_props.add(str(k))
     print("\n".join(true_props))
 if __name__ == "__main__":
     #[['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
     T = example_theory()
-    # Don't compile until you're finished adding all your constraints!
     T = T.compile()
     S = T.solve()
     #print(f"what does S do?: \n{S}")
