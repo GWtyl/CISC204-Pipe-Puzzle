@@ -230,6 +230,8 @@ x = FancyPropositions("x")
 y = FancyPropositions("y")
 z = FancyPropositions("z")
 
+#stores all solutions
+routes = []
 def example_theory():
     #print(PIPE_ORIENTATIONS)
     '''You should have some propositions representing if two squares are connected, 
@@ -243,6 +245,43 @@ def example_theory():
     E.add_constraint(Location(['E'], 10))
     E.add_constraint(Location(['W'], 34))
 
+    
+    
+    #find all solution: there is a total of 6 solutions(found using a bfs algorithm)
+    #each grid has a certain number of life points.
+    #each time a grid is used in a solution, a life point is remove
+    #once all life points for a grid is removed, remove it from grid
+    #tile_life will be ordered in: 1. tile position 2. life points
+    tile_life = [[12,3],[13,1],[21,3],[22,4],[23,3],[31,1],[32,3],[33,6]]
+    temp_tile = []
+    while len(routes) != 6: 
+        #first thing is to check if any tile life has gone to zero. If so, remove it from temp grid
+        for j in tile_life:
+            if j[1] == 0:
+                tile_life.remove(j)
+        print(tile_life)
+        route = []
+        temp_tile = tile_life.copy()
+        route.append(Connected(10,11))
+        currPos = 11
+        while currPos != 33:
+            for i in temp_tile:
+                if currPos+1 == i[0] or currPos+10 ==i[0]:
+                    route.append(Connected(currPos,i[0]))
+                    currPos = i[0]
+                    for j in tile_life:
+                        if j[0] == i[0]:
+                            j[1] = j[1] - 1
+                        break
+                    temp_tile.remove(i)
+                    break
+        route.append(Connected(currPos,currPos+1))
+        routes.append(route)
+
+    print(f"this is routes: {routes}")
+
+    
+    
     '''enforce only one pipe per location but can have different orientations'''
     
     for g in grid_setup:
@@ -350,6 +389,9 @@ def example_theory():
     E.add_constraint(And(sol))
     #print(f"this is the current value of curval: {curval}")'''
     
+    # #enforce one route from 10 to 34 to be true: Conncted(10,11)
+    l=[Connected(10,11),Connected(11,21),Connected(21,31),Connected(31,32),Connected(32,33),Connected(33,34)]
+    E.add_constraint(And(l))
     #TODO: generate all possible routes between 10 and 34
     '''check if any of the two locations are connected by seeing if they are neighbors and have the connectable orientation'''
     for l1 in LOCATIONS:
@@ -357,6 +399,10 @@ def example_theory():
             if l1 != l2:
                 E.add_constraint((NeighborLR(l1, l2) & Have_east(l1) & Have_west(l2))>>Connected(l1, l2))
                 E.add_constraint((NeighborUD(l1, l2) & Have_north(l1) & Have_south(l2))>>Connected(l1, l2))
+                E.add_constraint(Connected(l1, l2)>>(NeighborLR(l1, l2) & Have_east(l1) & Have_west(l2)))
+                E.add_constraint(Connected(l1, l2)>>(NeighborUD(l1, l2) & Have_north(l1) & Have_south(l2)))
+    #enfore straight and three opening at 11
+    #constraint.add_exactly_one(E, Location(['E'], 10)&Location(['S', 'W'], 11), Location(['E'], 10)&Location(['E', 'W'], 11), Location(['E'], 10)&Location(['N', 'E', 'W'],11), Location(['E'], 10)&Location(['S', 'E', 'W'],11))
     
     
     #constraint.add_exactly_one(E, Location(['E'], 10)&Location(['S', 'W'], 11), Location(['E'], 10)&Location(['E', 'W'], 11), Location(['E'], 10)&Location(['N', 'E', 'W'],11), Location(['E'], 10)&Location(['S', 'E', 'W'],11))
