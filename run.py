@@ -259,7 +259,7 @@ def example_theory():
         for j in tile_life:
             if j[1] == 0:
                 tile_life.remove(j)
-        print(tile_life)
+        #print(tile_life)
         route = []
         temp_tile = tile_life.copy()
         route.append(Connected(10,11))
@@ -278,7 +278,7 @@ def example_theory():
         route.append(Connected(currPos,currPos+1))
         routes.append(route)
 
-    print(f"this is routes: {routes}")
+    #print(f"this is routes: {routes}")
 
     
     
@@ -355,13 +355,33 @@ def example_theory():
     E.add_constraint(And(l))
     #TODO: generate all possible routes between 10 and 34
     '''check if any of the two locations are connected by seeing if they are neighbors and have the connectable orientation'''
-    for l1 in LOCATIONS:
+    '''for l1 in LOCATIONS:
         for l2 in LOCATIONS:
             if l1 != l2:
                 E.add_constraint((NeighborLR(l1, l2) & Have_east(l1) & Have_west(l2))>>Connected(l1, l2))
                 E.add_constraint((NeighborUD(l1, l2) & Have_north(l1) & Have_south(l2))>>Connected(l1, l2))
                 E.add_constraint(Connected(l1, l2)>>(NeighborLR(l1, l2) & Have_east(l1) & Have_west(l2)))
-                E.add_constraint(Connected(l1, l2)>>(NeighborUD(l1, l2) & Have_north(l1) & Have_south(l2)))
+                E.add_constraint(Connected(l1, l2)>>(NeighborUD(l1, l2) & Have_north(l1) & Have_south(l2)))'''
+    #test case #enforce one route from 10 to 34 to be true: Conncted(10,11)
+    l=[[Connected(10, 11), Connected(11, 12), Connected(12, 13), Connected(13, 23), Connected(23, 33), Connected(33, 34)], 
+       [Connected(10, 11), Connected(11, 12), Connected(12, 22), Connected(22, 23), Connected(23, 33), Connected(33, 34)],
+       [Connected(10, 11), Connected(11, 12), Connected(12, 22), Connected(22, 32), Connected(32, 33), Connected(33, 34)], 
+       [Connected(10, 11), Connected(11, 21), Connected(21, 22), Connected(22, 32), Connected(32, 33), Connected(33, 34)],
+        [Connected(10, 11), Connected(11, 21), Connected(21, 31), Connected(31, 32), Connected(32, 33), Connected(33, 34)],
+        [Connected(10, 11), Connected(11, 21), Connected(21, 22), Connected(22, 23), Connected(23, 33), Connected(33, 34)]]
+    E.add_constraint(And(*l[0]) | And(*l[1]) | And(*l[2]) | And(*l[3]) | And(*l[4]) | And(*l[5]))
+    '''check if any of the two locations are connected by seeing if they are neighbors and have the connectable orientation'''
+    
+    
+    '''if pipe at 12 is oreated in a certain way, then location 11 and 12 is not conncted and 11 does not have straight pipe'''
+    #E.add_constraint((Connected(11,12)&(Location(['E', 'W'], 11)))>>(~Location(['N', 'S'], 12)) & (~Location(['N', 'E'], 12)&~Location(['N', 'W'], 12)&~Location(['S', 'E'], 12)) & (~Location(['N', 'S', 'E'], 12)))
+    E.add_constraint((Location(['N', 'S'], 12) | Location(['N', 'E'], 12) | Location(['N', 'W'], 12) | Location(['S', 'E'], 12) | (Location(['N', 'S', 'E'], 12)))&(Location(['E', 'W'], 11)>>~(Connected(11,12))))
+    '''if there are a angled pipe at 11, then 11 and 12 are not connected'''
+    E.add_constraint(Location(['S', 'W'], 11)>>~Connected(11,12))
+    '''if pipe at 12 is oreated in a certain way, then location 11 and 12 is not conncted and 11 does not have straight pipe'''
+    #E.add_constraint((Connected(12,13)&(Location(['E', 'W'], 12)))>>(~Location(['N', 'S'], 13)) & (~Location(['N', 'E'], 13)&~Location(['N', 'W'], 13)&~Location(['S', 'E'], 13)) & (~Location(['N', 'S', 'E'], 13)))
+    E.add_constraint(((Location(['N', 'S'], 13) | Location(['N', 'E'], 13)|Location(['N', 'W'], 13)|Location(['S', 'E'], 13)| Location(['N', 'S', 'E'], 13))&Location(['E', 'W'], 12))>>~(Connected(12,13)))
+    """if there are a angled pipe at 12 and  then 12 and 13 are not connected"""
     return E
 
 def display_solution(S, want=False):
