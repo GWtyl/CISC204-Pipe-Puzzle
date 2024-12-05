@@ -272,7 +272,7 @@ def example_theory():
         route.append(Connected(currPos,34))
         routes.append(route)
         
-    direction[0],direction[-1] = direction[-1],direction[0]
+    direction[1],direction[-1] = direction[-1],direction[1]
     route = []
     currPos = 11
     route.append(Connected(10,11))
