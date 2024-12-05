@@ -104,7 +104,7 @@ class Have_from_west(object):
         self.loc = loc
 
     def _prop_name(self):
-        return f"{self.loc} come from West"
+        return f"{self.loc} can come from West"
 '''a grid cell have opeing from north'''
 @proposition(E)
 class Have_from_north(object):
@@ -113,7 +113,7 @@ class Have_from_north(object):
         self.loc = loc
 
     def _prop_name(self):
-        return f"{self.loc} come from North"
+        return f"{self.loc} can come from North"
 
 '''whether or not the grid has a solution'''
 #TODO: decide if this is needed
@@ -160,7 +160,7 @@ class Not_empty(object):
         return f"[Not_empty({self.loc})]"'''
 
 '''test case'''
-#have one solution
+'''#have one solution
 grid_setup = [
     Location(['E'], 10),
     Location(['N', 'W'], 11),
@@ -173,8 +173,20 @@ grid_setup = [
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)
-]
-
+]'''
+'''grid_setup = [#no solution
+    Location(['E'], 10),
+    Location(['S', 'E'], 11),
+    Location(['N', 'S', 'E'], 12),
+    Location(['S', 'W'], 13),
+    Location(['S', 'E'], 21),
+    Location(['S', 'E'], 22),
+    Location(['S', 'E', 'W'], 23),
+    Location(['N', 'S', 'W'], 31),
+    Location(['N', 'S'], 32),
+    Location(['N', 'S', 'E'], 33),
+    Location(['W'], 34)
+]'''
 #grid has no solution
 '''grid_setup = [
     Location(['E'], 10),
@@ -301,8 +313,8 @@ def example_theory():
     # print()
     #pprint(f"this is routes: {routes}")
     # print()
-    for r in routes:
-        print(r)
+    '''for r in routes:
+        print(r)'''
     
     #TODO:model exploration
     '''enforce only one pipe per location except for 22 and see where the pipe is can conncted to '''
@@ -318,34 +330,32 @@ def example_theory():
                 This specific pipe orientation is the only one that accommodates all potential directions the route might take. 
                 If this orientation fails to establish the necessary connections, none of the other pipe orientations will work either.)'''
                 E.add_constraint(~Location(['N', 'S', 'E'], g.location)&~Location(['N', 'S', 'W'], g.location)&~Location(['N', 'E', 'W'], g.location))
-                E.add_constraint(~Have_from_north(g.location))
-            elif g.location == 33 or g.location == 32 or g.location == 31:#only want ['N','S','E'] in row 3
+                E.add_constraint(Location(['S','E','W'],g.location)>>~Have_from_north(g.location))
+            elif g.location == 33 or g.location == 32 or g.location == 31:#only want ['N', 'E', 'W'] in row 3
                 E.add_constraint(~Location(['N', 'S', 'W'], g.location)&~Location(['S', 'E', 'W'], g.location)&~Location(['N','S', 'E'], g.location))
-                E.add_constraint(~Have_from_west(g.location))
+                E.add_constraint(Location(['N', 'E', 'W'],g.location)>>~Have_from_west(g.location))
             elif g.location == 21:#only want ['N','S','E'] at 21
                 E.add_constraint(~Location(['N', 'S', 'W'], g.location)&~Location(['S', 'E', 'W'], g.location)&~Location(['N', 'E', 'W'], g.location))
-                E.add_constraint(~Have_from_west(g.location))
+                E.add_constraint(Location(['N','S','E'],g.location)>>~Have_from_west(g.location))
             elif g.location == 23:#only want ['N', 'S', 'W'] at 23
                 E.add_constraint(~Location(['N', 'S', 'E'], g.location)&~Location(['S', 'E', 'W'], g.location)&~Location(['N', 'E', 'W'], g.location))
-                E.add_constraint(~Have_to_east(g.location))
+                E.add_constraint(Location(['N','S','W'],g.location)>>~Have_to_east(g.location))
             for p in THREE_OPENING_PIPE:
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
         elif g.pipe in STRAIGHT_PIPE:
             if g.location == 11 or g.location ==12 or g.location ==32 or g.location == 33 :#only want ['E', 'W'] at row 1 and row 3
                 E.add_constraint(~Location(['N', 'S'], g.location))
-                E.add_constraint(~Have_from_north(g.location))
-                E.add_constraint(~Have_to_south(g.location))
+                E.add_constraint(~Have_from_north(g.location)&~Have_to_south(g.location))
                 if g.location == 11 or g.location == 12:
                     E.add_constraint(~Connected(g.location, g.location + 10))
             elif g.location == 21 or g.location == 23:#only want ['N', 'S'] at 21 and 23
                 E.add_constraint(~Location(['E', 'W'], g.location))
                 if g.location == 21:
-                    E.add_constraint(~Connected(g.location, g.location + 1))
+                    E.add_constraint((Location(['E', 'W'],g.location)|Location(['N', 'S'],g.location))>>~Connected(g.location, g.location + 1))
                 elif g.location == 23:
-                    E.add_constraint(~Connected(g.location, g.location - 1))
-                E.add_constraint(~Have_to_east(g.location))
-                E.add_constraint(~Have_from_west(g.location))
+                    E.add_constraint((Location(['E', 'W'],g.location)|Location(['N', 'S'],g.location))>>~Connected(g.location, g.location - 1))
+                E.add_constraint(Location(['N', 'S'],g.location)>>(~Have_to_east(g.location)&~Have_from_west(g.location)))
             elif g.location == 13:
                 E.add_constraint(~Connected(g.location, g.location + 10))
             elif g.location == 31:
@@ -384,16 +394,16 @@ def example_theory():
                 E.add_constraint((~Have_to_east(g.location-1)|~Have_from_west(g.location+1))>>~Location(['E', 'W'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_north(g.location+10)&Have_to_east(g.location-1)&Have_from_west(g.location+1)&(~Connected(11,12)|~Connected(32,33)))>>~Location(['N', 'S'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_north(g.location+10)&Have_to_east(g.location-1)&Have_from_west(g.location+1)&(~Connected(11,21)|~Connected(23,33)))>>~Location(['E', 'W'], g.location))
-                E.add_constraint(Location(['N', 'S'], g.location)>>(~Connected(21, 22)&~Connected(22, 23)))
-                E.add_constraint(Location(['E', 'W'], g.location)>>(~Connected(12, 22)&~Connected(22, 32)))
+                E.add_constraint(~Location(['E', 'W'], g.location)>>(~Connected(21, 22)&~Connected(22, 23)))
+                E.add_constraint(~Location(['N', 'S'], g.location)>>(~Connected(12, 22)&~Connected(22, 32)))
             elif g.pipe in ANGLED_PIPE:
                 E.add_constraint(~Location(['N', 'W'], g.location)&~Location(['S', 'E'], g.location))#prevent the pipe connect up and left
                 E.add_constraint((~Have_to_south(12)|~Have_from_west(23))>>~Location(['N', 'E'], g.location))
-                E.add_constraint((~Have_to_east(g.location-1)|~Have_from_north(g.location+10))>>~Location(['S', 'W'], g.location))
+                E.add_constraint((~Have_to_east(21)|~Have_from_north(32))>>~Location(['S', 'W'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_west(g.location+1)&Have_to_east(g.location-1)&Have_from_north(g.location+10)&(~Connected(11,21)|~Connected(32,33)))>>~Location(['S', 'W'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_west(g.location+1)&Have_to_east(g.location-1)&Have_from_north(g.location+10)&(~Connected(11,12)|~Connected(23,33)))>>~Location(['N', 'E'], g.location))
-                E.add_constraint(Location(['N', 'E'], g.location)>>(~Connected(21, 22)&~Connected(22, 32)))
-                E.add_constraint(Location(['S', 'W'], g.location)>>(~Connected(22, 23)&~Connected(12, 22)))
+                E.add_constraint(~Location(['S', 'W'], g.location)>>(~Connected(21, 22)&~Connected(22, 32)))
+                E.add_constraint(~Location(['N', 'E'], g.location)>>(~Connected(22, 23)&~Connected(12, 22)))
             elif g.pipe in THREE_OPENING_PIPE:#['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']
                 E.add_constraint(~Have_from_north(32)>>(~Location(['N', 'S', 'E'], 22)&~Location(['N', 'S', 'W'],22)&~Location(['S', 'E', 'W'],22)))#['N', 'E', 'W']
                 E.add_constraint(~Have_to_east(21)>>(~Location(['N', 'E', 'W'], 22)&~Location(['N', 'S', 'W'],22)&~Location(['S', 'E', 'W'],22)))#['N', 'S', 'E']
@@ -423,30 +433,20 @@ def example_theory():
         for l2 in LOCATIONS:
             if NeighborUD(l1, l2) not in NB and NeighborLR(l1, l2) not in NB:
                 E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
-                E.add_constraint(~Connected(l1, l2))
-
-    #TODO: test case #enforce one route from 10 to 34 to be true
-    l=[[Connected(10, 11), Connected(11, 12), Connected(12, 13), Connected(13, 23), Connected(23, 33), Connected(33, 34)], 
-       [Connected(10, 11), Connected(11, 12), Connected(12, 22), Connected(22, 23), Connected(23, 33), Connected(33, 34)],
-       [Connected(10, 11), Connected(11, 12), Connected(12, 22), Connected(22, 32), Connected(32, 33), Connected(33, 34)], 
-       [Connected(10, 11), Connected(11, 21), Connected(21, 22), Connected(22, 32), Connected(32, 33), Connected(33, 34)],
-        [Connected(10, 11), Connected(11, 21), Connected(21, 31), Connected(31, 32), Connected(32, 33), Connected(33, 34)],
-        [Connected(10, 11), Connected(11, 21), Connected(21, 22), Connected(22, 23), Connected(23, 33), Connected(33, 34)]]
-
-    #E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))    
-    E.add_constraint(And(*l[0]) | And(*l[1]) | And(*l[2]) | And(*l[3]) | And(*l[4]) | And(*l[5]))    
-
+                E.add_constraint(~NeighborUD(l1, l2)>>~Connected(l1, l2)) 
+                E.add_constraint(~NeighborLR(l1, l2)>>~Connected(l1, l2))   
+    E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))    
     return E
 
 def display_solution(S, want=False):
     true_props = set()
     for k in S:
-        if S[k] and (not want or 'Connected' in str(k)):
+        if S[k] and (not want or '@' in str(k)):
             true_props.add(str(k))
     print("\n".join(true_props))
 if __name__ == "__main__":
     print() #to make it look cleaner
-    empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
+    #empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
     #no_solution_grid()
     #TODO: larger grid
     #print(grid_setup)

@@ -237,12 +237,6 @@ def setup():
     '''select one setup from location_propositions; also made sure we have exactly one pipe on each location'''
     grid_setup.append(location_propositions[0])
     grid_setup.append(location_propositions[random.randint(1, 10)])
-    #this for loop does the same thing as the rest of the code it's easier to read
-    #can decide if you want to use the for loop or hard code
-    for i in range(11,82,10):
-        p = location_propositions[random.randint(i,i+9)]
-        grid_setup.append(p)
-    '''
     p=location_propositions[random.randint(11, 20)]
     grid_setup.append(p)
     p=location_propositions[random.randint(21, 30)]
@@ -258,9 +252,9 @@ def setup():
     p=location_propositions[random.randint(71, 80)]
     grid_setup.append(p)
     p=location_propositions[random.randint(81, 90)]
-    grid_setup.append(p)'''
+    grid_setup.append(p)
     grid_setup.append(location_propositions[len(location_propositions)-1])
-#have one solution
+'''#have one solution
 grid_setup = [
     Location(['E'], '10'),
     Location(['N', 'W'], '11'),
@@ -273,7 +267,7 @@ grid_setup = [
     Location(['N', 'S', 'E'], '32'),
     Location(['N', 'S', 'E'], '33'),
     Location(['W'], '34')
-]
+]'''
 '''grid_setup = [
     Location(['E'], '10'),
     Location(['S', 'E'], '11'),
@@ -669,8 +663,8 @@ def display_solution(S, want=False):
             true_props.add(str(k)+' is '+str(S[k]))
     print("\n".join(true_props))
 if __name__ == "__main__":
-    #setup()
-    #print(f"this is the grid setup: \n{grid_setup}")
+    setup()
+    print(f"this is the grid setup: \n{grid_setup}")
     for r in routes[:6]:    
         print(r)
     # #this print[['W'], ['E'], ['N', 'S'], ['E', 'W'], ['N', 'E'] ['S', 'W'], 
@@ -690,8 +684,8 @@ if __name__ == "__main__":
     print("# Solutions: %d" % count_solutions(T))#number of solutions
     print("   Solution: %s" % T.solve())#solution'''
     
-    print("\nVariable likelihoods:")
+    '''print("\nVariable likelihoods:")
     for v,vn in zip([a,b,c,d,y,z], 'abcdyz'):
         # Ensure that you only send these functions NNF formulas
         # Literals are compiled to NNF here
-        print(" %s: %.2f" % (vn, likelihood(T, v)))
+        print(" %s: %.2f" % (vn, likelihood(T, v)))'''
