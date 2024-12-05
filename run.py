@@ -192,14 +192,15 @@ def test_greater_grid():
     return 0
 '''if there are empty grid cell, this setup still havee a solution'''
 def empty_grid_cell():
-    #remove 12 and still have 1 solution
+    #remove 21 and have 0 solution
     global grid_setup
     grid_setup=[
     Location(['E'], 10),
     Location(['N', 'W'], 11),
+    Location(['S', 'E'], 12),
     Location(['N', 'E'], 13),
-    Location(['E', 'W'], 21),
-    Location(['S', 'E'], 22),
+    
+    Location(['S', 'E'], 22),#Location(['E', 'W'], 21),
     Location(['N', 'E', 'W'], 23),
     Location(['N', 'S', 'E'], 31),
     Location(['N', 'S', 'E'], 32),
@@ -228,8 +229,19 @@ b = Location(['W'], 34)
 routes = []
 def example_theory():
     #print(PIPE_ORIENTATIONS)
+    '''the opening of start piece can only facing east'''
     E.add_constraint(Location(['E'], 10))
+    '''the opening of end piece can only facing west'''
     E.add_constraint(Location(['W'], 34))
+    '''restict the pipe orientation at 10 and 34 so that no other pipe orietation can be at 10 and 34'''
+    for p in PIPE_ORIENTATIONS:
+        if  p!= ['E'] and p != ['W']:
+            E.add_constraint(~Location(p, 10))
+            E.add_constraint(~Location(p, 34))
+    '''no other location can have pipe opening facing east or west'''
+    for l in LOCATIONS[1:-1]:
+        E.add_constraint(~Location(['E'], l))
+        E.add_constraint(~Location(['W'], l))
     E.add_constraint(~Connected(10, 34)) #10 and 34 can't connect directly
     
     #TODO:fix the loop so it can have all possible path
@@ -287,8 +299,10 @@ def example_theory():
     routes.append(route)
 
     # print()
-    # pprint(f"this is routes: {routes}")
+    #pprint(f"this is routes: {routes}")
     # print()
+    for r in routes:
+        print(r)
     
     #TODO:model exploration
     '''enforce only one pipe per location except for 22 and see where the pipe is can conncted to '''
@@ -297,6 +311,12 @@ def example_theory():
         #enfore pipe orientation at 11 and 33
         if len(g.pipe) == 3:#enforce only 1 orientations for 3 opening pipe at different location
             if g.location == 11 or g.location == 12 or g.location == 13:#only want ['S','E','W'] in row 1
+                '''(If there is a 3-opening pipe at location 11, it must have the orientation SEW. 
+                Among the four possible orientations for a 3-opening pipe, only SEW can connect both downward and to the right, 
+                with the remaining opening leading either downward or to the right.
+                If a solution route passes through grid cell 11, the pipe must connect to the adjacent grid cell, whether to the right or below. 
+                This specific pipe orientation is the only one that accommodates all potential directions the route might take. 
+                If this orientation fails to establish the necessary connections, none of the other pipe orientations will work either.)'''
                 E.add_constraint(~Location(['N', 'S', 'E'], g.location)&~Location(['N', 'S', 'W'], g.location)&~Location(['N', 'E', 'W'], g.location))
                 E.add_constraint(~Have_from_north(g.location))
             elif g.location == 33 or g.location == 32 or g.location == 31:#only want ['N','S','E'] in row 3
@@ -368,7 +388,7 @@ def example_theory():
                 E.add_constraint(Location(['E', 'W'], g.location)>>(~Connected(12, 22)&~Connected(22, 32)))
             elif g.pipe in ANGLED_PIPE:
                 E.add_constraint(~Location(['N', 'W'], g.location)&~Location(['S', 'E'], g.location))#prevent the pipe connect up and left
-                E.add_constraint((~Have_to_south(g.location-10)|~Have_from_west(g.location+1))>>~Location(['N', 'E'], g.location))
+                E.add_constraint((~Have_to_south(12)|~Have_from_west(23))>>~Location(['N', 'E'], g.location))
                 E.add_constraint((~Have_to_east(g.location-1)|~Have_from_north(g.location+10))>>~Location(['S', 'W'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_west(g.location+1)&Have_to_east(g.location-1)&Have_from_north(g.location+10)&(~Connected(11,21)|~Connected(32,33)))>>~Location(['S', 'W'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_west(g.location+1)&Have_to_east(g.location-1)&Have_from_north(g.location+10)&(~Connected(11,12)|~Connected(23,33)))>>~Location(['N', 'E'], g.location))
@@ -413,20 +433,20 @@ def example_theory():
         [Connected(10, 11), Connected(11, 21), Connected(21, 31), Connected(31, 32), Connected(32, 33), Connected(33, 34)],
         [Connected(10, 11), Connected(11, 21), Connected(21, 22), Connected(22, 23), Connected(23, 33), Connected(33, 34)]]
 
-    E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))    
-    #E.add_constraint(And(*l[0]) | And(*l[1]) | And(*l[2]) | And(*l[3]) | And(*l[4]) | And(*l[5]))    
+    #E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))    
+    E.add_constraint(And(*l[0]) | And(*l[1]) | And(*l[2]) | And(*l[3]) | And(*l[4]) | And(*l[5]))    
 
     return E
 
 def display_solution(S, want=False):
     true_props = set()
     for k in S:
-        if S[k] :#and (not want or 'Connected' in str(k)):
+        if S[k] and (not want or 'Connected' in str(k)):
             true_props.add(str(k))
     print("\n".join(true_props))
 if __name__ == "__main__":
     print() #to make it look cleaner
-    #empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
+    empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
     #no_solution_grid()
     #TODO: larger grid
     #print(grid_setup)
