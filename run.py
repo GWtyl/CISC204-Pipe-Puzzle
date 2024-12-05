@@ -5,6 +5,7 @@ from bauhaus.utils import count_solutions, likelihood
 from nnf import config
 config.sat_backend = "kissat"
 import random
+from pprint import pprint
 # Encoding that will store all of your constraints
 E = Encoding()
 LOCATIONS = [10, 11, 12, 13, 21, 22, 23, 31, 32, 33, 34]
@@ -233,38 +234,62 @@ def example_theory():
     
     #TODO:fix the loop so it can have all possible path
     #find all solution: there is a total of 6 solutions(found using a bfs algorithm)
-    #each grid has a certain number of life points.
-    #each time a grid is used in a solution, a life point is remove
-    #once all life points for a grid is removed, remove it from grid
-    #tile_life will be ordered in: 1. tile position 2. life points
-    '''tile_life = [[12,3],[13,1],[21,3],[22,4],[23,3],[31,1],[32,3],[33,6]]
-    temp_tile = []
-    while len(routes) != 6: 
-        #first thing is to check if any tile life has gone to zero. If so, remove it from temp grid
-        for j in tile_life:
-            if j[1] == 0:
-                tile_life.remove(j)
-        #print(tile_life)
+    #each solution has a distinct path travelled to get from 10 to 34
+    #each path will only consists of moving 4 times, from 11 to 33(starting from 11, and ending at 33) 
+    #connection for (10,11) and (33,34) is manually added
+    #have 2 loops and 1 mannual statement to find all the paths
+    
+    direction = [0,0,1,1] # 0 represents go right, 1 represents go down
+    
+    for i in range(3):
         route = []
-        temp_tile = tile_life.copy()
-        route.append(Connected(10,11))
         currPos = 11
-        while currPos != 33:
-            for i in temp_tile:
-                if currPos+1 == i[0] or currPos+10 ==i[0]:
-                    route.append(Connected(currPos,i[0]))
-                    currPos = i[0]
-                    for j in tile_life:
-                        if j[0] == i[0]:
-                            j[1] = j[1] - 1
-                        break
-                    temp_tile.remove(i)
-                    break
-        route.append(Connected(currPos,currPos+1))
-        routes.append(route)'''
+        route.append(Connected(10,11))
+        if i != 0:
+            direction[i],direction[i+1] = direction[i+1],direction[i]
+        for j in direction:
+            if j == 0:
+                route.append(Connected(currPos,currPos+1))
+                currPos = currPos+1
+            elif j == 1:
+                route.append(Connected(currPos,currPos+10))
+                currPos = currPos+10
+        route.append(Connected(currPos,34))
+        routes.append(route)
+    
+    for i in range(2):
+        direction[i],direction[i+1] = direction[i+1],direction[i]
+        route = []
+        currPos = 11
+        route.append(Connected(10,11))
+        for j in direction:
+            if j == 0:
+                route.append(Connected(currPos,currPos+1))
+                currPos = currPos+1
+            elif j == 1:
+                route.append(Connected(currPos,currPos+10))
+                currPos = currPos+10
+        route.append(Connected(currPos,34))
+        routes.append(route)
+        
+    direction[0],direction[-1] = direction[-1],direction[0]
+    route = []
+    currPos = 11
+    route.append(Connected(10,11))
+    for j in direction:
+        if j == 0:
+            route.append(Connected(currPos,currPos+1))
+            currPos = currPos+1
+        elif j == 1:
+            route.append(Connected(currPos,currPos+10))
+            currPos = currPos+10
+    route.append(Connected(currPos,34))
+    routes.append(route)
 
-    #print(f"this is routes: {routes}")
-
+    # print()
+    # pprint(f"this is routes: {routes}")
+    # print()
+    
     #TODO:model exploration
     '''enforce only one pipe per location except for 22 and see where the pipe is can conncted to '''
     for g in grid_setup:
@@ -387,7 +412,9 @@ def example_theory():
        [Connected(10, 11), Connected(11, 21), Connected(21, 22), Connected(22, 32), Connected(32, 33), Connected(33, 34)],
         [Connected(10, 11), Connected(11, 21), Connected(21, 31), Connected(31, 32), Connected(32, 33), Connected(33, 34)],
         [Connected(10, 11), Connected(11, 21), Connected(21, 22), Connected(22, 23), Connected(23, 33), Connected(33, 34)]]
-    E.add_constraint(And(*l[0]) | And(*l[1]) | And(*l[2]) | And(*l[3]) | And(*l[4]) | And(*l[5]))    
+
+    E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))    
+    #E.add_constraint(And(*l[0]) | And(*l[1]) | And(*l[2]) | And(*l[3]) | And(*l[4]) | And(*l[5]))    
 
     return E
 
@@ -398,6 +425,7 @@ def display_solution(S, want=False):
             true_props.add(str(k))
     print("\n".join(true_props))
 if __name__ == "__main__":
+    print() #to make it look cleaner
     #empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
     #no_solution_grid()
     #TODO: larger grid
