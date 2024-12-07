@@ -200,7 +200,7 @@ grid_setup = [
     Location(['N', 'S'], 33),
     Location(['W'], 34)]'''
 
-'''if there are empty grid cell, this setup still havee a solution'''
+'''if there are empty grid cell, this setup still have a solution'''
 def empty_grid_cell():
     #remove 21 and have 0 solution
     global grid_setup
@@ -230,6 +230,57 @@ def no_sol_with_row_strai():
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)]
+    
+#this is when at 10 and 11 is not connected at the beginning 
+def disconnect_at_beginning():
+    global grid_setup
+    grid_setup = [
+    Location(['E'], 10),
+    Location(['N', 'W'], 11),
+    Location(['S', 'E'], 12),
+    Location(['N', 'E'], 13),
+    Location(['E', 'W'], 21),
+    Location(['S', 'E'], 22),
+    Location(['N', 'E', 'W'], 23),
+    Location(['N', 'S', 'E'], 31),
+    Location(['N', 'S', 'E'], 32),
+    Location(['N', 'S', 'E'], 33),
+    Location(['W'], 34)
+    ]
+#if the entire grid is filled with angled pipes
+def all_angled_pipe():
+    global grid_setup
+    grid_setup = [
+    Location(['E'], 10),
+    Location(['N', 'E'], 11),
+    Location(['S', 'E'], 12),
+    Location(['N', 'E'], 13),
+    Location(['E', 'W'], 21),
+    Location(['S', 'E'], 22),
+    Location(['N', 'E'], 23),
+    Location(['S', 'E'], 31),
+    Location(['S', 'E'], 32),
+    Location(['S', 'E'], 33),
+    Location(['W'], 34)
+    ]
+    
+#test for if the program can find two paths    
+def two_path():
+    global grid_setup
+    grid_setup = [
+    Location(['E'],10),
+    Location(['S','E','W'],11),
+    Location(['E','W'],12),
+    Location(['S','W'],13),
+    Location(['N','S'],21),
+    Location(['E','W'],22),
+    Location(['N','S'],23),
+    Location(['N','E'],31),
+    Location(['E','W'],32),
+    Location(['N','E','W'],33),
+    Location(['W'],34)    
+    ]    
+    
 # Call your variables whatever you want
 a = Location(['E'], 10)
 b = Location(['W'], 34)
@@ -237,6 +288,7 @@ b = Location(['W'], 34)
 #TODO: comment on all code
 #stores all solutions
 routes = []
+
 def example_theory():
     '''check if any of the grid cell is empty, if it is not empty, remove from the list of location that is empty'''
     location_check=LOCATIONS.copy()
@@ -445,7 +497,15 @@ def example_theory():
         else:
             continue
       
-    E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))    
+    E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))  
+    
+    #find two paths
+    E.add_constraint((And(*routes[0]) | And(*routes[1])) | (And(routes[0]) | And(routes[2])) | (And(*routes[0]) | And(*routes[3]))
+                     | (And(*routes[0]) | And(*routes[4])) | (And(*routes[0]) | And(*routes[5])) | (And(*routes[1]) | And(*routes[2]))
+                     | (And(*routes[1]) | And(*routes[3])) | (And(*routes[1]) | And(*routes[4])) | (And(*routes[1]) | And(*routes[5]))
+                     | (And(*routes[2]) | And(*routes[3])) | (And(*routes[2]) | And(*routes[3])) | (And(*routes[2]) | And(*routes[4]))
+                     | (And(*routes[2]) | And(*routes[5])) | (And(*routes[3]) | And(*routes[4])) | (And(*routes[3]) | And(*routes[5]))
+                     | (And(*routes[4]) | And(*routes[5])))
     return E
 
 def display_solution(S, want=False):
@@ -456,14 +516,15 @@ def display_solution(S, want=False):
     print("\n".join(true_props))
 if __name__ == "__main__":
     print() #to make it look cleaner
-    empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
+    #empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
     #no_sol_with_row_strai()
+    #two_path()
     #TODO: larger grid
     print(grid_setup)
     T = example_theory()
     T = T.compile()
     S = T.solve()
-    #print(f"what does S do?: \n{S}")
+    #pprint(f"what does S do?: \n{S}")
     if S:
         display_solution(S, True)
         print("there's a solution")
