@@ -238,22 +238,10 @@ def no_sol_with_row_strai():
     
 #this is when at 10 and 11 is not connected at the beginning 
 def disconnect_at_beginning():
-    global grid_setup
-    grid_setup = [
-    Location(['E'], 10),
-    Location(['N', 'W'], 11),
-    Location(['S', 'E'], 12),
-    Location(['N', 'E'], 13),
-    Location(['E', 'W'], 21),
-    Location(['S', 'E'], 22),
-    Location(['N', 'E', 'W'], 23),
-    Location(['N', 'S', 'E'], 31),
-    Location(['N', 'S', 'E'], 32),
-    Location(['N', 'S', 'E'], 33),
-    Location(['W'], 34)
-    ]
+    E.add_constraint(~Connected(10,11))
 #if the entire grid is filled with angled pipes
 def all_angled_pipe():
+    
     global grid_setup
     grid_setup = [
     Location(['E'], 10),
@@ -271,20 +259,12 @@ def all_angled_pipe():
     
 #test for if the program can find two paths    
 def two_path():
-    global grid_setup
-    grid_setup = [
-    Location(['E'],10),
-    Location(['S','E','W'],11),
-    Location(['E','W'],12),
-    Location(['S','W'],13),
-    Location(['N','S'],21),
-    Location(['E','W'],22),
-    Location(['N','S'],23),
-    Location(['N','E'],31),
-    Location(['E','W'],32),
-    Location(['N','E','W'],33),
-    Location(['W'],34)    
-    ]    
+    E.add_constraint((And(*routes[0]) | And(*routes[1])) | (And(routes[0]) | And(routes[2])) | (And(*routes[0]) | And(*routes[3]))
+                     | (And(*routes[0]) | And(*routes[4])) | (And(*routes[0]) | And(*routes[5])) | (And(*routes[1]) | And(*routes[2]))
+                     | (And(*routes[1]) | And(*routes[3])) | (And(*routes[1]) | And(*routes[4])) | (And(*routes[1]) | And(*routes[5]))
+                     | (And(*routes[2]) | And(*routes[3])) | (And(*routes[2]) | And(*routes[3])) | (And(*routes[2]) | And(*routes[4]))
+                     | (And(*routes[2]) | And(*routes[5])) | (And(*routes[3]) | And(*routes[4])) | (And(*routes[3]) | And(*routes[5]))
+                     | (And(*routes[4]) | And(*routes[5])))
     
 # Call your variables whatever you want
 a = Location(['E'], 10)
@@ -502,13 +482,7 @@ def example_theory():
       
     E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))  
     
-    #find two paths
-    E.add_constraint((And(*routes[0]) | And(*routes[1])) | (And(routes[0]) | And(routes[2])) | (And(*routes[0]) | And(*routes[3]))
-                     | (And(*routes[0]) | And(*routes[4])) | (And(*routes[0]) | And(*routes[5])) | (And(*routes[1]) | And(*routes[2]))
-                     | (And(*routes[1]) | And(*routes[3])) | (And(*routes[1]) | And(*routes[4])) | (And(*routes[1]) | And(*routes[5]))
-                     | (And(*routes[2]) | And(*routes[3])) | (And(*routes[2]) | And(*routes[3])) | (And(*routes[2]) | And(*routes[4]))
-                     | (And(*routes[2]) | And(*routes[5])) | (And(*routes[3]) | And(*routes[4])) | (And(*routes[3]) | And(*routes[5]))
-                     | (And(*routes[4]) | And(*routes[5])))
+
     return E
 
 def display_solution(S, want=False):
@@ -525,6 +499,7 @@ if __name__ == "__main__":
     #two_path()
     print(grid_setup)
     T = example_theory()
+    #disconnect_at_beginning()
     T = T.compile()
     S = T.solve()
     #pprint(f"what does S do?: \n{S}")
