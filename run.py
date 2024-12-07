@@ -152,8 +152,49 @@ class NeighborUD(object):
 
     def _prop_name(self):
         return f"[NeighborUD({self.loc1}, {self.loc2})]"
+
+'''the type of pipe(straight, angled, three_opening) can opens to these orientations'''
+@proposition(E)
+class Straight_Pipe(object): 
+    def __init__(self,pipe_specific,loc) -> None:
+        assert pipe_specific in STRAIGHT_PIPE
+        assert loc in LOCATIONS
+        self.loc = loc
+        self.pipe_specific = pipe_specific
+    def _prop_name(self):
+        return f"Straint pipe opens {self.pipe_specific} at location {self.loc}"
+@proposition(E)
+class Angled_Pipe(object): 
+    def __init__(self, pipe_specific, loc) -> None:
+        assert pipe_specific in ANGLED_PIPE
+        assert loc in LOCATIONS
+        self.loc = loc
+        self.pipe_specific = pipe_specific
+    def _prop_name(self):
+        return f"(Angled pipe opens {self.pipe_specific} at location {self.loc})"
+@proposition(E)
+class Three_Opening_Pipe(object): 
+    def __init__(self, pipe_specific, loc) -> None:
+        assert pipe_specific in THREE_OPENING_PIPE
+        assert loc in LOCATIONS
+        self.loc = loc
+        self.pipe_specific = pipe_specific
+    def _prop_name(self):
+        return f"(Three opening pipe opens {self.pipe_specific} at location {self.loc})"
+
+'''water can flow from one location to another'''
+@proposition(E)
+class Flow(object):
+    def __init__(self, loc1, loc2) -> None:
+        assert loc1 in LOCATIONS
+        assert loc2 in LOCATIONS
+        self.loc1 = loc1
+        self.loc2 = loc2
+
+    def _prop_name(self):
+        return f"Water can flow from {self.loc1} to {self.loc2}"
     
-'''the location has no pipe on it'''
+'''the location has no pipe on it(empty)'''
 @proposition(E)
 class Empty(object):
     def __init__(self, loc) -> None:
@@ -257,15 +298,6 @@ def all_angled_pipe():
     Location(['W'], 34)
     ]
     
-#test for if the program can find two paths    
-def two_path():
-    E.add_constraint((And(*routes[0]) | And(*routes[1])) | (And(routes[0]) | And(routes[2])) | (And(*routes[0]) | And(*routes[3]))
-                     | (And(*routes[0]) | And(*routes[4])) | (And(*routes[0]) | And(*routes[5])) | (And(*routes[1]) | And(*routes[2]))
-                     | (And(*routes[1]) | And(*routes[3])) | (And(*routes[1]) | And(*routes[4])) | (And(*routes[1]) | And(*routes[5]))
-                     | (And(*routes[2]) | And(*routes[3])) | (And(*routes[2]) | And(*routes[3])) | (And(*routes[2]) | And(*routes[4]))
-                     | (And(*routes[2]) | And(*routes[5])) | (And(*routes[3]) | And(*routes[4])) | (And(*routes[3]) | And(*routes[5]))
-                     | (And(*routes[4]) | And(*routes[5])))
-    
 # Call your variables whatever you want
 a = Location(['E'], 10)
 b = Location(['W'], 34)
@@ -305,11 +337,12 @@ def example_theory():
         for l2 in LOCATIONS:
             if NeighborUD(l1, l2) not in NB and NeighborLR(l1, l2) not in NB:
                 E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
-                E.add_constraint(~NeighborUD(l1, l2)>>~Connected(l1, l2)) 
-                E.add_constraint(~NeighborLR(l1, l2)>>~Connected(l1, l2)) 
+                #if they are not neighbour, they are not connected and water can not flow from one to another
+                E.add_constraint(~NeighborUD(l1, l2)>>(~Connected(l1, l2)&~Flow(l1, l2))) 
+                E.add_constraint(~NeighborLR(l1, l2)>>(~Connected(l1, l2)&~Flow(l1, l2))) 
     '''if any of the location is empty in a neighbour pairs, then they are not connected to their neighbour'''
     for nb in NB:
-        E.add_constraint((Empty(nb.loc1)|Empty(nb.loc2))>>(~Connected(nb.loc1, nb.loc2)&~Connected(nb.loc2, nb.loc1)))
+        E.add_constraint((Empty(nb.loc1)|Empty(nb.loc2))>>(~Connected(nb.loc1, nb.loc2)&~Connected(nb.loc2, nb.loc1)&~Flow(nb.loc1, nb.loc2)&~Flow(nb.loc2, nb.loc1)))
 
     '''the opening of start piece can only facing east'''
     E.add_constraint(Location(['E'], 10))
@@ -324,7 +357,8 @@ def example_theory():
     for l in LOCATIONS[1:-1]:
         E.add_constraint(~Location(['E'], l))
         E.add_constraint(~Location(['W'], l))
-    E.add_constraint(~Connected(10, 34)) #10 and 34 can't connect directly
+    '''start and end piece can not be connected directly'''
+    E.add_constraint(~Connected(10, 34))
     
     '''find all solution: there is a total of 6 solutions(found using a bfs algorithm)
     each solution has a distinct path travelled to get from 10 to 34
@@ -378,14 +412,17 @@ def example_theory():
             currPos = currPos+10
     route.append(Connected(currPos,34))
     routes.append(route)
-
+    E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))  
     # print()
     #pprint(f"this is routes: {routes}")
     # print()
     '''for r in routes:
         print(r)'''
     
-    '''enforce only one pipe per location except for 22 and see where the pipe is can conncted to '''
+    '''enforce only one pipe per location except for 22'''
+    #we enfore all 2 orientation for 2 opening pipe and 4 orientation for 3 opening pipe
+    # but we will eliminate the one that does not help us to connect 10 to 34
+    # ex. no NS at 11 since it can not connect to 10 or 11 which is needed for thee solver to connect 10 to 34
     for g in grid_setup:
         location=[]
         #enfore pipe orientation at 11 and 33
@@ -410,7 +447,7 @@ def example_theory():
             elif g.location == 23:#only want ['N', 'S', 'W'] at 23
                 E.add_constraint(~Location(['N', 'S', 'E'], g.location)&~Location(['S', 'E', 'W'], g.location)&~Location(['N', 'E', 'W'], g.location))
                 E.add_constraint(Location(['N','S','W'],g.location)>>(~Have_to_east(g.location)&Have_from_north(g.location)&Have_to_south(g.location)&Have_from_west(g.location)))
-            for p in THREE_OPENING_PIPE:
+            for p in THREE_OPENING_PIPE:#want exactly one pipe orientation for the same pipe at this location
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
         elif g.pipe in STRAIGHT_PIPE:
@@ -433,7 +470,7 @@ def example_theory():
                 E.add_constraint(~Connected(g.location, g.location + 10))
             elif g.location == 31:
                 E.add_constraint(~Connected(g.location, g.location +1))
-            for p in STRAIGHT_PIPE:
+            for p in STRAIGHT_PIPE:# want exactly one pipe orientation for the same pipe at this location
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
         elif g.pipe in ANGLED_PIPE:
@@ -455,34 +492,42 @@ def example_theory():
                 E.add_constraint(Location(['N','E'],g.location)>>(~Have_from_west(g.location)&~Have_to_south(g.location)&Have_from_north(g.location)&Have_to_east(g.location)))
                 if g.location == 33 or g.location == 32:
                     E.add_constraint(~Connected(g.location-1,g.location))
-            for p in ANGLED_PIPE:#enforce 4 oreintation
+            for p in ANGLED_PIPE:#enforce exactly one from 4 oreintation
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
     '''check location 22 after everthing other locaction has been checked'''
     for g in grid_setup:
         if g.location == 22:
             if g.pipe in STRAIGHT_PIPE:
+                # for the setup to be valid, the straight pipe must be connected from 12 to 32 or 21 to 23
+                # So the straight pipe must be oriented ['N', 'S'] or ['E', 'W'] depending on the connection the neighbour need
+                # if 12 or 32 does not have opening towards 22, it means 12-32 can not connected and that means 22 can not have NS since it can not connect to 12 or 32 anyways
                 E.add_constraint((~Have_to_south(g.location-10)|~Have_from_north(g.location+10))>>~Location(['N', 'S'], g.location))
+                # if 21 or 23 does not have opening towards 22, it means 21-23 can not connected and that means 22 can not have EW
                 E.add_constraint((~Have_to_east(g.location-1)|~Have_from_west(g.location+1))>>~Location(['E', 'W'], g.location))
+                # if all 4 neighbour does have opening towards 22, then check connection before in the routes
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_north(g.location+10)&Have_to_east(g.location-1)&Have_from_west(g.location+1)&(~Connected(11,12)|~Connected(32,33)))>>~Location(['N', 'S'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_north(g.location+10)&Have_to_east(g.location-1)&Have_from_west(g.location+1)&(~Connected(11,21)|~Connected(23,33)))>>~Location(['E', 'W'], g.location))
                 E.add_constraint(~Location(['E', 'W'], g.location)>>(~Connected(21, 22)&~Connected(22, 23)))
                 E.add_constraint(~Location(['N', 'S'], g.location)>>(~Connected(12, 22)&~Connected(22, 32)))
+                #we enforce exactly one pipe orientation for the pipe at same location 
+                #there are 2 possible orientation for straight pipe at 22, and the constraint above made sure we elinate those one that does not help to connect 12-32 or 21-23
                 for p in STRAIGHT_PIPE:
                     location.append(Location(p, g.location))
                 constraint.add_exactly_one(E, *location)
             elif g.pipe in ANGLED_PIPE:
-                E.add_constraint(~Location(['N', 'W'], g.location)&~Location(['S', 'E'], g.location))#prevent the pipe connect up and left
+                #prevent the pipe connect up and left
+                E.add_constraint(~Location(['N', 'W'], g.location)&~Location(['S', 'E'], g.location))
                 E.add_constraint((~Have_to_south(12)|~Have_from_west(23))>>~Location(['N', 'E'], g.location))
                 E.add_constraint((~Have_to_east(21)|~Have_from_north(32))>>~Location(['S', 'W'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_west(g.location+1)&Have_to_east(g.location-1)&Have_from_north(g.location+10)&(~Connected(11,21)|~Connected(32,33)))>>~Location(['S', 'W'], g.location))
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_west(g.location+1)&Have_to_east(g.location-1)&Have_from_north(g.location+10)&(~Connected(11,12)|~Connected(23,33)))>>~Location(['N', 'E'], g.location))
                 E.add_constraint(~Location(['S', 'W'], g.location)>>(~Connected(21, 22)&~Connected(22, 32)))
                 E.add_constraint(~Location(['N', 'E'], g.location)>>(~Connected(22, 23)&~Connected(12, 22)))
-                for p in ANGLED_PIPE:#enforce 4 oreintation
+                for p in ANGLED_PIPE:
                     location.append(Location(p, g.location))
                 constraint.add_exactly_one(E, *location)
-            elif g.pipe in THREE_OPENING_PIPE:#['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']
+            elif g.pipe in THREE_OPENING_PIPE:
                 E.add_constraint(~Have_from_north(32)>>(~Location(['N', 'S', 'E'], 22)&~Location(['N', 'S', 'W'],22)&~Location(['S', 'E', 'W'],22)))#['N', 'E', 'W']
                 E.add_constraint(~Have_to_east(21)>>(~Location(['N', 'E', 'W'], 22)&~Location(['N', 'S', 'W'],22)&~Location(['S', 'E', 'W'],22)))#['N', 'S', 'E']
                 E.add_constraint(~Have_from_west(23)>>(~Location(['N', 'S', 'E'], 22)&~Location(['S', 'E', 'W'],22)&~Location(['N', 'E', 'W'],22)))#['N', 'S', 'W']
@@ -492,43 +537,29 @@ def example_theory():
                 constraint.add_exactly_one(E, *location)
         else:
             continue
-        
-    E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))  
-    
-
     return E
 
 def display_solution(S, want=False):
     true_props = set()
     for k in S:
-        if S[k] and (not want or 'Connected' in str(k)):
+        if S[k] and (not want or '@' in str(k)):
             true_props.add(str(k))
     print("\n".join(true_props))
 if __name__ == "__main__":
     print() #to make it look cleaner
-    '''model exploration'''
+    '''model exploration 1 and 2 and 3'''
     #empty_grid_cell()
     #no_sol_with_row_strai()
-    #two_path()
+    #all_angled_pipe()
     print(grid_setup)
     T = example_theory()
+    '''model exploration 4'''
     #disconnect_at_beginning()
     T = T.compile()
     S = T.solve()
-    #pprint(f"what does S do?: \n{S}")
+    '''this display the what the optimal solution grid looks like'''
     if S:
         display_solution(S, True)
         print("there's a solution")
     else:
         print("No solution!!")
-    # After compilation (and only after), you can check some of the properties
-    # of your model:
-    '''print("\nSatisfiable: %s" % T.satisfiable())
-    print("# Solutions: %d" % count_solutions(T))
-    print("   Solution: %s" % T.solve())'''
-
-    '''print("\nVariable likelihoods:")
-    for v,vn in zip([a,b,c,x,y,z], 'abcxyz'):
-        # Ensure that you only send these functions NNF formulas
-        # Literals are compiled to NNF here
-        print(" %s: %.2f" % (vn, likelihood(T, v)))'''
