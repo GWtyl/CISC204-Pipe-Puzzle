@@ -385,7 +385,7 @@ def example_theory():
     '''for r in routes:
         print(r)'''
     
-    '''enforce only one pipe per location except for 22'''
+    '''enforce only one pipe per location except for 22 and see where the pipe is can conncted to '''
     for g in grid_setup:
         location=[]
         #enfore pipe orientation at 11 and 33
@@ -394,36 +394,41 @@ def example_theory():
                 '''(If there is a 3-opening pipe at location 11, it must have the orientation SEW. 
                 Among the four possible orientations for a 3-opening pipe, only SEW can connect both downward and to the right, 
                 with the remaining opening leading either downward or to the right.
+                If SEW does not work, then that means that all the other types of pipe won't work either because SEW has the most paths.
+                If SEW with the most paths does not have a solution, then the other pipe orientation with less paths won't have one either.
                 If a solution route passes through grid cell 11, the pipe must connect to the adjacent grid cell, whether to the right or below. 
                 This specific pipe orientation is the only one that accommodates all potential directions the route might take. 
                 If this orientation fails to establish the necessary connections, none of the other pipe orientations will work either.)'''
                 E.add_constraint(~Location(['N', 'S', 'E'], g.location)&~Location(['N', 'S', 'W'], g.location)&~Location(['N', 'E', 'W'], g.location))
-                E.add_constraint(Location(['S','E','W'],g.location)>>~Have_from_north(g.location))
+                E.add_constraint(Location(['S','E','W'],g.location)>>(~Have_from_north(g.location)&Have_to_east(g.location)&Have_from_west(g.location)&Have_to_south(g.location)))
             elif g.location == 33 or g.location == 32 or g.location == 31:#only want ['N', 'E', 'W'] in row 3
                 E.add_constraint(~Location(['N', 'S', 'W'], g.location)&~Location(['S', 'E', 'W'], g.location)&~Location(['N','S', 'E'], g.location))
-                E.add_constraint(Location(['N', 'E', 'W'],g.location)>>~Have_from_west(g.location))
+                E.add_constraint(Location(['N', 'E', 'W'],g.location)>>(~Have_to_south(g.location)&Have_from_north(g.location)&Have_to_east(g.location)&Have_from_west(g.location)))
             elif g.location == 21:#only want ['N','S','E'] at 21
                 E.add_constraint(~Location(['N', 'S', 'W'], g.location)&~Location(['S', 'E', 'W'], g.location)&~Location(['N', 'E', 'W'], g.location))
-                E.add_constraint(Location(['N','S','E'],g.location)>>~Have_from_west(g.location))
+                E.add_constraint(Location(['N','S','E'],g.location)>>(~Have_from_west(g.location)&Have_from_north(g.location)&Have_to_south(g.location)&Have_to_east(g.location)))
             elif g.location == 23:#only want ['N', 'S', 'W'] at 23
                 E.add_constraint(~Location(['N', 'S', 'E'], g.location)&~Location(['S', 'E', 'W'], g.location)&~Location(['N', 'E', 'W'], g.location))
-                E.add_constraint(Location(['N','S','W'],g.location)>>~Have_to_east(g.location))
+                E.add_constraint(Location(['N','S','W'],g.location)>>(~Have_to_east(g.location)&Have_from_north(g.location)&Have_to_south(g.location)&Have_from_west(g.location)))
             for p in THREE_OPENING_PIPE:
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
         elif g.pipe in STRAIGHT_PIPE:
             if g.location == 11 or g.location ==12 or g.location ==32 or g.location == 33 :#only want ['E', 'W'] at row 1 and row 3
                 E.add_constraint(~Location(['N', 'S'], g.location))
-                E.add_constraint(~Have_from_north(g.location)&~Have_to_south(g.location))
+                E.add_constraint(Location(['E','W'],g.location)>>(~Have_from_north(g.location)&~Have_to_south(g.location)&Have_to_east(g.location)&Have_from_west(g.location)))
                 if g.location == 11 or g.location == 12:
+                    #~Connected(11, 21)    ~Connected(12, 22)
                     E.add_constraint(~Connected(g.location, g.location + 10))
+                elif g.location ==32 or g.location == 33:
+                    E.add_constraint(~Connected(g.location-10, g.location))
             elif g.location == 21 or g.location == 23:#only want ['N', 'S'] at 21 and 23
                 E.add_constraint(~Location(['E', 'W'], g.location))
                 if g.location == 21:
-                    E.add_constraint((Location(['E', 'W'],g.location)|Location(['N', 'S'],g.location))>>~Connected(g.location, g.location + 1))
+                    E.add_constraint(Location(['N', 'S'],g.location)>>(~Connected(g.location, g.location + 1)&Have_from_north(g.location)&Have_to_south(g.location)))
                 elif g.location == 23:
-                    E.add_constraint((Location(['E', 'W'],g.location)|Location(['N', 'S'],g.location))>>~Connected(g.location, g.location - 1))
-                E.add_constraint(Location(['N', 'S'],g.location)>>(~Have_to_east(g.location)&~Have_from_west(g.location)))
+                    E.add_constraint(Location(['N', 'S'],g.location)>>~Connected(g.location-1, g.location))
+                E.add_constraint(Location(['N', 'S'],g.location)>>(~Have_to_east(g.location)&~Have_from_west(g.location)&Have_from_north(g.location)&Have_to_south(g.location)))
             elif g.location == 13:
                 E.add_constraint(~Connected(g.location, g.location + 10))
             elif g.location == 31:
@@ -433,24 +438,23 @@ def example_theory():
             constraint.add_exactly_one(E, *location)
         elif g.pipe in ANGLED_PIPE:
             if g.location == 11 or g.location == 12 or g.location == 13:#if there is angled pipe at row 1, it must oriented [S, W]
-                E.add_constraint(~Location(['N', 'W'], g.location))
-                E.add_constraint(~Location(['N', 'E'], g.location))
-                E.add_constraint(~Location(['S', 'E'], g.location))
-                E.add_constraint(~Have_from_north(g.location)&~Have_to_east(g.location))
+                E.add_constraint(~Location(['N', 'W'], g.location) &~Location(['N', 'E'], g.location) & ~Location(['S', 'E'], g.location))
+                E.add_constraint(Location(['S','W'],g.location)>>(~Have_from_north(g.location)&~Have_to_east(g.location)&Have_to_south(g.location)&Have_from_west(g.location)))
                 if g.location == 11 or g.location == 12:
                     E.add_constraint(~Connected(g.location, g.location + 1))
             elif g.location == 21:#if there is angled pipe at 21, it must oriented [N, E]
                 E.add_constraint(~Location(['N', 'W'], g.location)&~Location(['S', 'W'], g.location)&~Location(['S', 'E'], g.location))
-                E.add_constraint(~Connected(g.location, g.location + 10))
-                E.add_constraint(~Have_from_west(g.location)&~Have_to_south(g.location))
+                E.add_constraint(Location(['N', 'E'],21)>>(~Have_from_west(g.location)&~Have_to_south(g.location)&Have_from_north(g.location)&Have_to_east(g.location)))
+                E.add_constraint(~Connected(21, 31))
             elif g.location == 23:#if there is angled pipe at 23, it must oriented [S, W]
                 E.add_constraint(~Location(['N', 'W'], g.location)&~Location(['N', 'E'], g.location)&~Location(['S', 'E'], g.location))
-                E.add_constraint(~Have_from_north(g.location)&~Have_to_east(g.location))
+                E.add_constraint(Location(['S','W'],g.location)>>(~Have_from_north(g.location)&~Have_to_east(g.location)&Have_to_south(g.location)&Have_from_west(g.location)))
+                E.add_constraint(~Connected(13,23))
             elif g.location == 33 or g.location == 32 or g.location == 31:#if there is angled pipe at row 3, it must oriented [N, E]
-                E.add_constraint(~Location(['N', 'W'], g.location))
-                E.add_constraint(~Location(['S', 'W'], g.location))
-                E.add_constraint(~Location(['S', 'E'], g.location))
-                E.add_constraint(~Have_from_west(g.location)&~Have_to_south(g.location))
+                E.add_constraint(~Location(['N', 'W'], g.location)&~Location(['S', 'W'], g.location)&~Location(['S', 'E'], g.location))
+                E.add_constraint(Location(['N','E'],g.location)>>(~Have_from_west(g.location)&~Have_to_south(g.location)&Have_from_north(g.location)&Have_to_east(g.location)))
+                if g.location == 33 or g.location == 32:
+                    E.add_constraint(~Connected(g.location-1,g.location))
             for p in ANGLED_PIPE:#enforce 4 oreintation
                 location.append(Location(p, g.location))
             constraint.add_exactly_one(E, *location)
@@ -464,6 +468,9 @@ def example_theory():
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_north(g.location+10)&Have_to_east(g.location-1)&Have_from_west(g.location+1)&(~Connected(11,21)|~Connected(23,33)))>>~Location(['E', 'W'], g.location))
                 E.add_constraint(~Location(['E', 'W'], g.location)>>(~Connected(21, 22)&~Connected(22, 23)))
                 E.add_constraint(~Location(['N', 'S'], g.location)>>(~Connected(12, 22)&~Connected(22, 32)))
+                for p in STRAIGHT_PIPE:
+                    location.append(Location(p, g.location))
+                constraint.add_exactly_one(E, *location)
             elif g.pipe in ANGLED_PIPE:
                 E.add_constraint(~Location(['N', 'W'], g.location)&~Location(['S', 'E'], g.location))#prevent the pipe connect up and left
                 E.add_constraint((~Have_to_south(12)|~Have_from_west(23))>>~Location(['N', 'E'], g.location))
@@ -472,14 +479,20 @@ def example_theory():
                 E.add_constraint((Have_to_south(g.location-10)&Have_from_west(g.location+1)&Have_to_east(g.location-1)&Have_from_north(g.location+10)&(~Connected(11,12)|~Connected(23,33)))>>~Location(['N', 'E'], g.location))
                 E.add_constraint(~Location(['S', 'W'], g.location)>>(~Connected(21, 22)&~Connected(22, 32)))
                 E.add_constraint(~Location(['N', 'E'], g.location)>>(~Connected(22, 23)&~Connected(12, 22)))
+                for p in ANGLED_PIPE:#enforce 4 oreintation
+                    location.append(Location(p, g.location))
+                constraint.add_exactly_one(E, *location)
             elif g.pipe in THREE_OPENING_PIPE:#['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']
                 E.add_constraint(~Have_from_north(32)>>(~Location(['N', 'S', 'E'], 22)&~Location(['N', 'S', 'W'],22)&~Location(['S', 'E', 'W'],22)))#['N', 'E', 'W']
                 E.add_constraint(~Have_to_east(21)>>(~Location(['N', 'E', 'W'], 22)&~Location(['N', 'S', 'W'],22)&~Location(['S', 'E', 'W'],22)))#['N', 'S', 'E']
                 E.add_constraint(~Have_from_west(23)>>(~Location(['N', 'S', 'E'], 22)&~Location(['S', 'E', 'W'],22)&~Location(['N', 'E', 'W'],22)))#['N', 'S', 'W']
                 E.add_constraint(~Have_to_south(12)>>(~Location(['N', 'S', 'E'], 22)&~Location(['N', 'S', 'W'],22)&~Location(['N', 'E', 'W'],22)))#['S', 'E', 'W']
+                for p in THREE_OPENING_PIPE:
+                    location.append(Location(p, g.location))
+                constraint.add_exactly_one(E, *location)
         else:
             continue
-      
+        
     E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))  
     
 
