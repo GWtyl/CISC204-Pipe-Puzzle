@@ -149,18 +149,17 @@ class NeighborUD(object):
         return f"[NeighborUD({self.loc1}, {self.loc2})]"
     
 '''the location is occupied(not empty)'''
-#TODO: needed for model expolration
-'''@proposition(E)
-class Not_empty(object):
+@proposition(E)
+class Empty(object):
     def __init__(self, loc) -> None:
         assert loc in LOCATIONS
         self.loc = loc
 
     def _prop_name(self):
-        return f"[Not_empty({self.loc})]"'''
+        return f"Empty(location{self.loc})"
 
 '''test case'''
-'''#have one solution
+#have one solution
 grid_setup = [
     Location(['E'], 10),
     Location(['N', 'W'], 11),
@@ -173,7 +172,7 @@ grid_setup = [
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)
-]'''
+]
 '''grid_setup = [#no solution
     Location(['E'], 10),
     Location(['S', 'E'], 11),
@@ -200,8 +199,7 @@ grid_setup = [
     Location(['N', 'S'], 32),
     Location(['N', 'S'], 33),
     Location(['W'], 34)]'''
-def test_greater_grid():
-    return 0
+
 '''if there are empty grid cell, this setup still havee a solution'''
 def empty_grid_cell():
     #remove 21 and have 0 solution
@@ -211,25 +209,24 @@ def empty_grid_cell():
     Location(['N', 'W'], 11),
     Location(['S', 'E'], 12),
     Location(['N', 'E'], 13),
-    
     Location(['S', 'E'], 22),#Location(['E', 'W'], 21),
     Location(['N', 'E', 'W'], 23),
     Location(['N', 'S', 'E'], 31),
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)]
-'''if there are a straint pipe at certain location, this setup does not have a solution'''
-def no_solution_grid():
+'''if there are a STRAIGHT_PIPE at certain location, this setup does not have a solution'''
+def no_sol_with_row_strai():
     global grid_setup
     grid_setup = [
     Location(['E'], 10),
     Location(['N', 'S'], 11),
     Location(['N', 'S'], 12),
     Location(['N', 'S'], 13),
-    Location(['E', 'W'], 21),
-    Location(['S', 'E'], 22),
+    Location(['N', 'E', 'W'], 21),
+    Location(['N', 'E', 'W'], 22),
     Location(['N', 'E', 'W'], 23),
-    Location(['N', 'S'], 31),
+    Location(['N', 'E', 'W'], 31),
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)]
@@ -237,9 +234,45 @@ def no_solution_grid():
 a = Location(['E'], 10)
 b = Location(['W'], 34)
 
+#TODO: comment on all code
 #stores all solutions
 routes = []
 def example_theory():
+    '''check if any of the grid cell is empty, if it is not empty, remove from the list of location that is empty'''
+    location_check=LOCATIONS.copy()
+    for g in grid_setup:
+        location_check.remove(g.location)#remove the location that is not empty
+    for lc in location_check:
+        E.add_constraint(Empty(lc))
+    '''find all location that is neighbours'''
+    '''first row neighbour'''#[10(0), 11(1), 12(2), 13(3), 21(4), 22(5), 23(6), 31(7), 32(8), 33(9), 34(10)]
+    for l1 in LOCATIONS[:3]:#[10(0), 11(1), 12(2)]
+        NB.append(NeighborLR(l1, l1 + 1))
+    '''second row neighbour'''
+    for l1 in LOCATIONS[4:6]:#[21, 22]
+        NB.append(NeighborLR(l1, l1 + 1))
+    '''third row neighbour'''
+    for l1 in LOCATIONS[7:10]:#[31, 32]
+        NB.append(NeighborLR(l1, l1 + 1))
+    '''first column neighbour'''
+    for l1 in LOCATIONS[1:4]:#[11, 12, 13]        
+        NB.append(NeighborUD(l1, l1 + 10))
+    '''second column neighbour'''
+    for l1 in LOCATIONS[4:7]:#[21, 22, 23]
+        NB.append(NeighborUD(l1, l1 + 10))
+    E.add_constraint(And(NB))
+    '''everthing else is not neighbour and since they are not neighbour, they are not connected'''
+    for l1 in LOCATIONS:
+        for l2 in LOCATIONS:
+            if NeighborUD(l1, l2) not in NB and NeighborLR(l1, l2) not in NB:
+                E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
+                E.add_constraint(~NeighborUD(l1, l2)>>~Connected(l1, l2)) 
+                E.add_constraint(~NeighborLR(l1, l2)>>~Connected(l1, l2)) 
+    for nb in NB:
+        E.add_constraint((Empty(nb.loc1)|Empty(nb.loc2))>>(~Connected(nb.loc1, nb.loc2)&~Connected(nb.loc2, nb.loc1)))
+
+    
+    
     #print(PIPE_ORIENTATIONS)
     '''the opening of start piece can only facing east'''
     E.add_constraint(Location(['E'], 10))
@@ -411,45 +444,22 @@ def example_theory():
                 E.add_constraint(~Have_to_south(12)>>(~Location(['N', 'S', 'E'], 22)&~Location(['N', 'S', 'W'],22)&~Location(['N', 'E', 'W'],22)))#['S', 'E', 'W']
         else:
             continue
-    '''find all location that is neighbours'''
-    '''first row neighbour'''#[10(0), 11(1), 12(2), 13(3), 21(4), 22(5), 23(6), 31(7), 32(8), 33(9), 34(10)]
-    for l1 in LOCATIONS[:3]:#[10(0), 11(1), 12(2)]
-        NB.append(NeighborLR(l1, l1 + 1))
-    '''second row neighbour'''
-    for l1 in LOCATIONS[4:6]:#[21, 22]
-        NB.append(NeighborLR(l1, l1 + 1))
-    '''third row neighbour'''
-    for l1 in LOCATIONS[7:10]:#[31, 32]
-        NB.append(NeighborLR(l1, l1 + 1))
-    '''first column neighbour'''
-    for l1 in LOCATIONS[1:4]:#[11, 12, 13]        
-        NB.append(NeighborUD(l1, l1 + 10))
-    '''second column neighbour'''
-    for l1 in LOCATIONS[4:7]:#[21, 22, 23]
-        NB.append(NeighborUD(l1, l1 + 10))
-    E.add_constraint(And(NB))
-    '''everthing else is not neighbour and since they are not neighbour, they are not connected'''
-    for l1 in LOCATIONS:
-        for l2 in LOCATIONS:
-            if NeighborUD(l1, l2) not in NB and NeighborLR(l1, l2) not in NB:
-                E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
-                E.add_constraint(~NeighborUD(l1, l2)>>~Connected(l1, l2)) 
-                E.add_constraint(~NeighborLR(l1, l2)>>~Connected(l1, l2))   
+      
     E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))    
     return E
 
 def display_solution(S, want=False):
     true_props = set()
     for k in S:
-        if S[k] and (not want or '@' in str(k)):
+        if S[k] and (not want or 'Connected' in str(k)):
             true_props.add(str(k))
     print("\n".join(true_props))
 if __name__ == "__main__":
     print() #to make it look cleaner
-    #empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
-    #no_solution_grid()
+    empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
+    #no_sol_with_row_strai()
     #TODO: larger grid
-    #print(grid_setup)
+    print(grid_setup)
     T = example_theory()
     T = T.compile()
     S = T.solve()
