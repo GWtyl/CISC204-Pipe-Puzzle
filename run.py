@@ -8,11 +8,14 @@ import random
 from pprint import pprint
 # Encoding that will store all of your constraints
 E = Encoding()
+'''all the locations in the grid'''
 LOCATIONS = [10, 11, 12, 13, 21, 22, 23, 31, 32, 33, 34]
+'''list of neighbors'''
 NB = []
 
 '''used to generate all possible orentations of a pipe'''
 ORIENTATIONS = list('NSEW')
+
 '''a visual representation of one grid cell
 
      N
@@ -21,6 +24,7 @@ ORIENTATIONS = list('NSEW')
    +----+
      S   
 '''
+
 '''used to generate all possible orentations of a pipe'''
 #the following loop give: [['W'], ['E'], ['N', 'S'], ['N', 'E'], ['N', 'W'], ['S', 'E'], ['S', 'W'], ['E', 'W'], ['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']]
 PIPE_ORIENTATIONS = [['W'],['E']]
@@ -39,11 +43,11 @@ for i in range(0, len(ORIENTATIONS)):#3 opening pipe
             p=[orien1, orien2, orien3]
             PIPE_ORIENTATIONS.append(p)
 
-'''possible pipe orientation for STRAIGHT piece'''
+'''possible pipe orientation for STRAIGHT pipe'''
 STRAIGHT_PIPE = []#this will contain:[['N', 'S'], ['E', 'W']] after the loop
-'''possible pipe orientation for ANGLED piece'''
+'''possible pipe orientation for ANGLED pipe'''
 ANGLED_PIPE = []#this will contain:[['N', 'W'], ['N', 'E'], ['S', 'E'], ['S', 'W']] after the loop
-'''possible pipe orientation for THREE_OPENING piece'''
+'''possible pipe orientation for THREE_OPENING pipe'''
 THREE_OPENING_PIPE = []#this will contain:[['N', 'S', 'E'], ['N', 'S', 'W'], ['N', 'E', 'W'], ['S', 'E', 'W']] after the loop
 '''initialize orientations for each type of pipe'''
 for p in PIPE_ORIENTATIONS:
@@ -55,7 +59,7 @@ for p in PIPE_ORIENTATIONS:
     elif len(p) == 3:
         THREE_OPENING_PIPE.append(p)
 
-'''given pipe is at given location; this works for the setup'''
+'''given pipe is at given location'''
 @proposition(E)
 class Location(object): 
     def __init__(self, pipe, location) -> None:
@@ -66,7 +70,7 @@ class Location(object):
     def _prop_name(self):
         return f"({self.pipe} @ {self.location})"
 
-'''the pipes at these location are connected'''
+'''the pipes at these two locations are connected'''
 @proposition(E)
 class Connected(object):
     def __init__(self, l1, l2) -> None:
@@ -78,7 +82,7 @@ class Connected(object):
     def _prop_name(self):
         return f"Connected({self.l1}, {self.l2})"
 
-'''a grid cell have opeing facing east'''
+'''pipe at this location have opeing facing east'''
 @proposition(E)
 class Have_to_east(object):
     def __init__(self, loc) -> None:
@@ -87,7 +91,7 @@ class Have_to_east(object):
 
     def _prop_name(self):
         return f"{self.loc} can go East"
-'''a grid cell have opeing facing south'''
+'''pipe at this location have opeing facing south'''
 @proposition(E)
 class Have_to_south(object):
     def __init__(self, loc) -> None:
@@ -96,7 +100,7 @@ class Have_to_south(object):
 
     def _prop_name(self):
         return f"{self.loc} can go South"
-'''a grid cell have opeing from west''' 
+'''pipe at this location have opeing from west''' 
 @proposition(E)
 class Have_from_west(object):
     def __init__(self, loc) -> None:
@@ -105,7 +109,7 @@ class Have_from_west(object):
 
     def _prop_name(self):
         return f"{self.loc} can come from West"
-'''a grid cell have opeing from north'''
+'''pipe at this location have opeing from north'''
 @proposition(E)
 class Have_from_north(object):
     def __init__(self, loc) -> None:
@@ -115,16 +119,17 @@ class Have_from_north(object):
     def _prop_name(self):
         return f"{self.loc} can come from North"
 
-'''whether or not the grid has a solution'''
-#TODO: decide if this is needed
+'''grid has a solution from location 10 to 34'''
 class Solution(object):
-    def __init__(self,condition) -> None:
-        assert condition in [0,1]
-        self.condition = condition
+    def __init__(self,loc1,loc2) -> None:
+        assert loc1 in LOCATIONS
+        assert loc2 in LOCATIONS
+        self.loc1 = loc1
+        self.loc2 = loc2
     def _prop_name(self):
-        return f"Solution:{self.condition}"
+        return f"Solution from {self.loc1} to {self.loc2})"
     
-'''given two locations are neighbors (they are beside each other)'''
+'''two locations are neighbors (they are beside each other)'''
 @proposition(E)
 class NeighborLR(object):
     def __init__(self, loc1, loc2) -> None:
@@ -136,7 +141,7 @@ class NeighborLR(object):
     def _prop_name(self):
         return f"[NeighborLR({self.loc1}, {self.loc2})]"
 
-'''given two locations are neighbors (they are on top of each other)'''
+'''two locations are neighbors (they are on top of each other)'''
 @proposition(E)
 class NeighborUD(object):
     def __init__(self, loc1, loc2) -> None:
@@ -148,7 +153,7 @@ class NeighborUD(object):
     def _prop_name(self):
         return f"[NeighborUD({self.loc1}, {self.loc2})]"
     
-'''the location is occupied(not empty)'''
+'''the location has no pipe on it'''
 @proposition(E)
 class Empty(object):
     def __init__(self, loc) -> None:
@@ -200,7 +205,7 @@ grid_setup = [
     Location(['N', 'S'], 33),
     Location(['W'], 34)]'''
 
-'''if there are empty grid cell, this setup still have a solution'''
+'''if there are empty grid cell, this setup have 0 solution'''
 def empty_grid_cell():
     #remove 21 and have 0 solution
     global grid_setup
@@ -215,7 +220,7 @@ def empty_grid_cell():
     Location(['N', 'S', 'E'], 32),
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)]
-'''if there are a STRAIGHT_PIPE at certain location, this setup does not have a solution'''
+'''if there are STRAIGHT_PIPEs at certain location, this setup does not have a solution'''
 def no_sol_with_row_strai():
     global grid_setup
     grid_setup = [
@@ -285,7 +290,6 @@ def two_path():
 a = Location(['E'], 10)
 b = Location(['W'], 34)
 
-#TODO: comment on all code
 #stores all solutions
 routes = []
 
@@ -293,11 +297,13 @@ def example_theory():
     '''check if any of the grid cell is empty, if it is not empty, remove from the list of location that is empty'''
     location_check=LOCATIONS.copy()
     for g in grid_setup:
-        location_check.remove(g.location)#remove the location that is not empty
+        #remove the location that is not empty
+        location_check.remove(g.location)
     for lc in location_check:
+        #add constraint that the location is empty
         E.add_constraint(Empty(lc))
-    '''find all location that is neighbours'''
-    '''first row neighbour'''#[10(0), 11(1), 12(2), 13(3), 21(4), 22(5), 23(6), 31(7), 32(8), 33(9), 34(10)]
+    '''find all location that is neighbours and store them in list NB'''
+    '''first row neighbour'''#index for all location[10(0), 11(1), 12(2), 13(3), 21(4), 22(5), 23(6), 31(7), 32(8), 33(9), 34(10)]
     for l1 in LOCATIONS[:3]:#[10(0), 11(1), 12(2)]
         NB.append(NeighborLR(l1, l1 + 1))
     '''second row neighbour'''
@@ -312,20 +318,19 @@ def example_theory():
     '''second column neighbour'''
     for l1 in LOCATIONS[4:7]:#[21, 22, 23]
         NB.append(NeighborUD(l1, l1 + 10))
+    #for all the location pair stored in NB, add constraint that they are neighbour
     E.add_constraint(And(NB))
-    '''everthing else is not neighbour and since they are not neighbour, they are not connected'''
+    '''everthing other pair that is not in NB is not neighbour and since they are not neighbour, they are not connected'''
     for l1 in LOCATIONS:
         for l2 in LOCATIONS:
             if NeighborUD(l1, l2) not in NB and NeighborLR(l1, l2) not in NB:
                 E.add_constraint(~NeighborUD(l1, l2)&~NeighborLR(l1, l2))
                 E.add_constraint(~NeighborUD(l1, l2)>>~Connected(l1, l2)) 
                 E.add_constraint(~NeighborLR(l1, l2)>>~Connected(l1, l2)) 
+    '''if any of the location is empty in a neighbour pairs, then they are not connected to their neighbour'''
     for nb in NB:
         E.add_constraint((Empty(nb.loc1)|Empty(nb.loc2))>>(~Connected(nb.loc1, nb.loc2)&~Connected(nb.loc2, nb.loc1)))
 
-    
-    
-    #print(PIPE_ORIENTATIONS)
     '''the opening of start piece can only facing east'''
     E.add_constraint(Location(['E'], 10))
     '''the opening of end piece can only facing west'''
@@ -341,12 +346,11 @@ def example_theory():
         E.add_constraint(~Location(['W'], l))
     E.add_constraint(~Connected(10, 34)) #10 and 34 can't connect directly
     
-    #TODO:fix the loop so it can have all possible path
-    #find all solution: there is a total of 6 solutions(found using a bfs algorithm)
-    #each solution has a distinct path travelled to get from 10 to 34
-    #each path will only consists of moving 4 times, from 11 to 33(starting from 11, and ending at 33) 
-    #connection for (10,11) and (33,34) is manually added
-    #have 2 loops and 1 mannual statement to find all the paths
+    '''find all solution: there is a total of 6 solutions(found using a bfs algorithm)
+    each solution has a distinct path travelled to get from 10 to 34
+    each path will only consists of moving 4 times, from 11 to 33(starting from 11, and ending at 33) 
+    connection for (10,11) and (33,34) is manually added
+    have 2 loops and 1 mannual statement to find all the paths'''
     
     direction = [0,0,1,1] # 0 represents go right, 1 represents go down
     
@@ -401,8 +405,7 @@ def example_theory():
     '''for r in routes:
         print(r)'''
     
-    #TODO:model exploration
-    '''enforce only one pipe per location except for 22 and see where the pipe is can conncted to '''
+    '''enforce only one pipe per location except for 22'''
     for g in grid_setup:
         location=[]
         #enfore pipe orientation at 11 and 33
@@ -516,10 +519,10 @@ def display_solution(S, want=False):
     print("\n".join(true_props))
 if __name__ == "__main__":
     print() #to make it look cleaner
-    #empty_grid_cell()#TODO:maek sure no empty grid cell when go over the grid
+    '''model exploration'''
+    #empty_grid_cell()
     #no_sol_with_row_strai()
     #two_path()
-    #TODO: larger grid
     print(grid_setup)
     T = example_theory()
     T = T.compile()
