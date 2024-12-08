@@ -1,13 +1,16 @@
 from bauhaus import Encoding, proposition, constraint, And, Or
 from bauhaus.utils import count_solutions, likelihood
 
-# These two lines make sure a faster SAT solver is used.
 from nnf import config
 config.sat_backend = "kissat"
-import random
+'''used for debug'''
 from pprint import pprint
-# Encoding that will store all of your constraints
+'''Encoding that will store all of your constraints'''
 E = Encoding()
+
+'''we only want to find the optimal solution, so the setup given after will be the one the contains most solution routes'''
+
+
 '''all the locations in the grid'''
 LOCATIONS = [10, 11, 12, 13, 21, 22, 23, 31, 32, 33, 34]
 '''list of neighbors'''
@@ -248,7 +251,7 @@ grid_setup = [
 
 '''if there are empty grid cell, this setup have 0 solution'''
 def empty_grid_cell():
-    #remove 21 and have 0 solution
+    #removed 21
     global grid_setup
     grid_setup=[
     Location(['E'], 10),
@@ -277,10 +280,10 @@ def no_sol_with_row_strai():
     Location(['N', 'S', 'E'], 33),
     Location(['W'], 34)]
     
-#this is when at 10 and 11 is not connected at the beginning 
+'''this is when at 10 and 11 is not connected at the beginning of the game, this should have 0 solution'''
 def disconnect_at_beginning():
     E.add_constraint(~Connected(10,11))
-#if the entire grid is filled with angled pipes
+'''if the entire grid is filled with angled pipes, this setup have 0 solution'''
 def all_angled_pipe():
     
     global grid_setup
@@ -549,7 +552,7 @@ if __name__ == "__main__":
     '''model exploration 1 and 2 and 3'''
     #empty_grid_cell()
     #no_sol_with_row_strai()
-    all_angled_pipe()
+    #all_angled_pipe()
     print(grid_setup)
     T = example_theory()
     '''model exploration 4'''
