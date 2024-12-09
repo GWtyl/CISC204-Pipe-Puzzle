@@ -156,7 +156,7 @@ class NeighborUD(object):
     def _prop_name(self):
         return f"[NeighborUD({self.loc1}, {self.loc2})]"
 
-'''the type of pipe(straight, angled, three_opening) can opens to these orientations'''
+'''the type of pipe(straight, angled, three_opening) can open to these orientations'''
 @proposition(E)
 class Straight_Pipe(object): 
     def __init__(self,pipe_specific,loc) -> None:
@@ -378,15 +378,16 @@ def example_theory():
         if i != 0: #since there is already a route, ignore the first
             direction[i],direction[i+1] = direction[i+1],direction[i]
         for j in direction:
-            if j == 0 and NeighborLR(currPos,currPos+1):
+            if j == 0 and NeighborLR(currPos,currPos+1): #if two pipes are neighbors and the direction is moving right
                 route.append(Connected(currPos,currPos+1))
                 currPos = currPos+1
-            elif j == 1 and NeighborUD(currPos,currPos+10):
+            elif j == 1 and NeighborUD(currPos,currPos+10): #if two pipes are neighbors and the direction is moving down
                 route.append(Connected(currPos,currPos+10))
                 currPos = currPos+10
-        route.append(Connected(currPos,34))
-        routes.append(route)
-    #loops two times for 2 routes
+        route.append(Connected(currPos,34)) #addt the last connection which is 33,34
+        routes.append(route)#add this route to the total routes
+        
+    #loops two times for 2 routes; similar to the first for loop
     for i in range(2):
         direction[i],direction[i+1] = direction[i+1],direction[i]
         route = []
@@ -402,7 +403,8 @@ def example_theory():
         route.append(Connected(currPos,34))
         routes.append(route)
         
-    #change the formation of the list one last time to get the last distinct route    
+    #change the formation of the list one last time to get the last distinct route   
+    #similar to the first two for loops 
     direction[1],direction[-1] = direction[-1],direction[1]
     route = []
     currPos = 11
@@ -417,7 +419,7 @@ def example_theory():
     route.append(Connected(currPos,34))
     routes.append(route)
     
-    #add all the routes as a constraint so at least one will have to be true
+    #add all the routes as a constraint so at least one will have to be true for there to be a solution
     E.add_constraint(And(*routes[0]) | And(*routes[1]) | And(*routes[2]) | And(*routes[3]) | And(*routes[4]) | And(*routes[5]))  
 
     '''enforce only one pipe per location except for 22'''
